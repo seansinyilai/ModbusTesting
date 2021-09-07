@@ -20,15 +20,7 @@ namespace ModbusTesting
         private void ToSend(Object e)
         {
             autoIncrement++;
-            connectionEstablishment.SENDRequest(new SendStruct()
-            {
-                transactionID = autoIncrement,
-                protocolID = 0,
-                Address = 1,
-                FunctionCode = (int)MBAPHeader.WriteMultipleRegister,
-                StartAddress = 200,
-                data = new byte[] { 10, 20 }
-            });
+            connectionEstablishment.SENDMsgFormat(autoIncrement, 0, 1, MBAPHeader.WriteMultipleRegister, 200, new byte[] { 20, 30 });
         }
     }
 }

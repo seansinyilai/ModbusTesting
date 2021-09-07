@@ -78,7 +78,7 @@ namespace ModbusConnection
                             byte[] buff = new byte[MasterClient.ReceiveBufferSize];
                             _streamFromServer.Read(buff, 0, buff.Length);
                             string temp = Encoding.ASCII.GetString(buff, 0, buff.Length).Trim((char)0);
-                            DealWithMsgFunc(temp);
+                            ReceivedMsg(temp);
                         }
                     }
                 }
@@ -88,6 +88,24 @@ namespace ModbusConnection
                     TcpToConnect(HostIP, Port);
                 }
             }
+        }
+         /// <param name="transactionID">autoIncrement</param>
+         /// <param name="protocolID">0 modbus</param>
+         /// <param name="Address">any</param>
+         /// <param name="FunctionCode">what to do</param>
+         /// <param name="StartAddress">buffer</param>
+         /// <param name="data">data to send</param>
+        public void SENDMsgFormat(int transactionID, int protocolID, int Address, MBAPHeader FunctionCode, int StartAddress, byte[] data)
+        {
+            SENDRequest(new SendStruct()
+            {
+                transactionID = transactionID,
+                protocolID = protocolID,
+                Address = Address,
+                FunctionCode = (int)FunctionCode,
+                StartAddress = StartAddress,
+                data = data
+            });
         }
         public void SENDRequest(SendStruct obj)
         {
@@ -158,7 +176,7 @@ namespace ModbusConnection
             }
         }
 
-        public virtual bool DealWithMsgFunc(string msg)
+        public virtual bool ReceivedMsg(string msg)
         {
             return false;
         }

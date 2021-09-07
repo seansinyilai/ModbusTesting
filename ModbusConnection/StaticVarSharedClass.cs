@@ -15,10 +15,5 @@ namespace ModbusConnection
         public static string FunctionCode = "FunctionCode";
         public static string StartRegisterAdd = "StartRegisterAdd";
         public static string Data = "Data";
-
-        public static byte[] AddressByte = new byte[] { 1 };
-        public static byte[] FunctionByte = new byte[1] { Convert.ToByte(MBAPHeader.WriteMultipleRegister) };
-
-       
     }
 }

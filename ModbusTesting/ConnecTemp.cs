@@ -14,7 +14,7 @@ namespace ModbusTesting
            
         }
        
-        public override bool DealWithMsgFunc(string msg)
+        public override bool ReceivedMsg(string msg)
         {
             return true;
         }
