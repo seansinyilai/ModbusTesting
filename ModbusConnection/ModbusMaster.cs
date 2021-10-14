@@ -6,12 +6,14 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 
 namespace ModbusConnection
 {
     public class ModbusMaster
     {
-
+        DispatcherTimer tikTok;
+        bool asd = false;
         Task RunReadMessageThread;
         TcpClient MasterClient;
         NetworkStream _streamFromServer = default;
@@ -44,8 +46,19 @@ namespace ModbusConnection
             Port = port;
             RunReadMessageThread = new Task(ReadMessage);
             RunReadMessageThread.Start();
+            tikTok = new DispatcherTimer();
+            tikTok.Tick += new EventHandler(timeCycle);
+            tikTok.Interval = new TimeSpan(0, 0, 0, 10);
+            tikTok.Start();
 
         }
+
+        private void timeCycle(object sender, EventArgs e)
+        {
+            byte[] data = new byte[] { 0x00, 0x0f, 0x00, 0x00, 0x00, 0x06, 0x01, 0x04, 0x00, 0x00, 0x00, 0x01 };
+        //    MasterClient.Client.Send(data);
+        }
+
         private void TcpToConnect(string hostIP, int port)
         {
             MasterClient = new TcpClient();
@@ -69,16 +82,25 @@ namespace ModbusConnection
                     }
                     if (MasterClient.Connected)
                     {
-                        byte[] testbyte = new byte[1];
-                        MasterClient.Client.Send(testbyte, testbyte.Length, 0);
+
+                        //byte[] testbyte = new byte[1];
+                        //MasterClient.Client.Send(testbyte, testbyte.Length, 0);
                         if (MasterClient.Available > 0)
                         {
                             DateTime RecvTime = DateTime.Now;
                             _streamFromServer = MasterClient.GetStream();
                             byte[] buff = new byte[MasterClient.ReceiveBufferSize];
-                            _streamFromServer.Read(buff, 0, buff.Length);
-                            string temp = Encoding.ASCII.GetString(buff, 0, buff.Length).Trim((char)0);
-                            ReceivedMsg(temp);
+                            MasterClient.Client.Receive(buff);
+                            int length = buff[5];
+                            byte[] datashow = new byte[length + 6];//定義所要顯示的接收的數據的長度  
+                            for (int i = 0; i <= length + 5; i++)//將要顯示的數據存放到數組datashow中  
+                            {
+                                datashow[i] = buff[i];
+                            }
+                            string stringdata = BitConverter.ToString(datashow);//把數組轉換成16
+                            //var c = _streamFromServer.Read(buff, 0, buff.Length);
+                            //string temp = Encoding.ASCII.GetString(buff, 0, buff.Length).Trim((char)0);
+                            ReceivedMsg(stringdata);
                         }
                     }
                 }
@@ -89,13 +111,13 @@ namespace ModbusConnection
                 }
             }
         }
-         /// <param name="transactionID">autoIncrement</param>
-         /// <param name="protocolID">0 modbus</param>
-         /// <param name="Address">any</param>
-         /// <param name="FunctionCode">what to do</param>
-         /// <param name="StartAddress">buffer</param>
-         /// <param name="data">data to send</param>
-        public void SENDMsgFormat(int transactionID, int protocolID, int Address, MBAPHeader FunctionCode, int StartAddress, byte[] data)
+        /// <param name="transactionID">autoIncrement</param>
+        /// <param name="protocolID">0 modbus</param>
+        /// <param name="Address">any</param>
+        /// <param name="FunctionCode">what to do</param>
+        /// <param name="StartAddress">buffer</param>
+        /// <param name="data">data to send</param>
+        public void SENDMsgFormat(int transactionID, int protocolID, int Address, FunctionCode FunctionCode, int StartAddress, byte[] data)
         {
             SENDRequest(new SendStruct()
             {
@@ -115,8 +137,9 @@ namespace ModbusConnection
             var highAndLowBitFunction = new byte[] { Convert.ToByte(obj.FunctionCode) };
             var highAndLowBitStartAddress = obj.StartAddress.SplitIntToHighAndLowByte();
             var mLength = highAndLowBitAddress.Length + highAndLowBitFunction.Length + highAndLowBitStartAddress.Length + obj.data.Length;
-            var lengthTotal = (highAndLowBitAddress.Length + highAndLowBitFunction.Length + highAndLowBitStartAddress.Length + obj.data.Length).SplitIntToHighAndLowByte();
             var dataCount = obj.data.Length.SplitIntToHighAndLowByte();
+            var lengthTotal = (highAndLowBitAddress.Length + highAndLowBitFunction.Length + highAndLowBitStartAddress.Length + obj.data.Length+ dataCount.Length).SplitIntToHighAndLowByte();
+          
             List<byte[]> tmp = new List<byte[]>();
             List<byte> tmpByteArray = new List<byte>();
             var result = Header_PDU_Data(new CommandStruct()
@@ -158,6 +181,7 @@ namespace ModbusConnection
             headerList.Add(Tuple.Create(StaticVarSharedClass.Address, obj.Address));
             headerList.Add(Tuple.Create(StaticVarSharedClass.FunctionCode, obj.FunctionCode));
             headerList.Add(Tuple.Create(StaticVarSharedClass.StartRegisterAdd, obj.StartAddress));
+            headerList.Add(Tuple.Create(StaticVarSharedClass.DataCount, obj.DataCount));
             headerList.Add(Tuple.Create(StaticVarSharedClass.Data, obj.data));
             return headerList;
         }

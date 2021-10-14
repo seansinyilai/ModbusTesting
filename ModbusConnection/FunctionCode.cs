@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace ModbusConnection
 {
-    public enum MBAPHeader
+    public enum FunctionCode
     {
+        ReadCoil = 1,
         ReadMultipleRegister = 3,
         WriteMultipleRegister = 16
     }

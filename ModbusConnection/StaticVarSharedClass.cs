@@ -14,6 +14,7 @@ namespace ModbusConnection
         public static string Address = "Address";
         public static string FunctionCode = "FunctionCode";
         public static string StartRegisterAdd = "StartRegisterAdd";
+        public static string DataCount = "DataCount";
         public static string Data = "Data";
     }
 }
