@@ -36,6 +36,7 @@ namespace ModbusConnection
         public int StartAddress { get; set; }
         public Action ToActLike { get; set; }
         public byte[] data { get; set; }
+        public int dataLength { get; set; }
         public SendStruct()
         {
         }

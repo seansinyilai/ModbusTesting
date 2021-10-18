@@ -11,7 +11,7 @@ namespace ModbusTesting
     {
         public RelayCommand ButtonSEND { get; set; }
         ConnecTemp connectionEstablishment { get; set; }
-        int autoIncrement = 0;
+        // int autoIncrement = 0;
         public MainTest()
         {
             connectionEstablishment = new ConnecTemp("127.0.0.1", 502);
@@ -19,20 +19,15 @@ namespace ModbusTesting
         }
         private void ToSend(Object e)
         {
-            autoIncrement++;
-            //var high = "11001101";
-            //var low =  "00000001";
-            //var com = high + low;
-            //var a = Convert.ToInt32(com, 2);
             ///connectionEstablishment.SENDMsgFormat(autoIncrement, 0, 1, FunctionCode.WriteMultipleRegister, 200, new byte[] { 20, 30 });
-            connectionEstablishment.ReadCoilsCommand_SendMsgFormat(autoIncrement, 0, 1, FunctionCode.ReadCoils, ModbusConnection.Action.ToRead, 20, 19);
-           // connectionEstablishment.ReadCoilsCommand_SendMsgFormat(autoIncrement, 0, 1, FunctionCode.ReadDiscreteInputs, ModbusConnection.Action.ToRead, 197, 22);
-           // connectionEstablishment.ReadCoilsCommand_SendMsgFormat(autoIncrement, 0, 1, FunctionCode.ReadHoldingRegisters, ModbusConnection.Action.ToRead, 108, 3);
-           // connectionEstablishment.SendMsgFormat(autoIncrement, 0, 1, FunctionCode.WriteSingleCoil, ModbusConnection.Action.ToWrite, 173, new byte[] { 255,0 });
-           // connectionEstablishment.SendMsgFormat(autoIncrement, 0, 1, FunctionCode.WriteSingleRegister, ModbusConnection.Action.ToWrite, 1, new byte[] { 0,3 });
+            // connectionEstablishment.ReadCoilsCommand_SendMsgFormat(1, 20, 19);
+            // connectionEstablishment.ReadDiscreteInputs_SendMsgFormat(1, 197, 22);
+            // connectionEstablishment.ReadHoldingRegister_SendMsgFormat(1, 108, 3);
+            //  connectionEstablishment.SendWriteSingleCoilMsgFormat(1, 173, new byte[] { 255, 0 });
+            // connectionEstablishment.SendWriteSingleRegisterMsgFormat(1, 1, new byte[] { 3,3 });
             //var asdasda = (byte)FunctionCode.WriteMultipleCoils;
-           // connectionEstablishment.SendMsgFormat(autoIncrement, 0, 1, FunctionCode.WriteMultipleCoils, ModbusConnection.Action.ToWrite, 20, new byte[] { 0, 10, 2, 205, 1 });
-           // connectionEstablishment.SendMsgFormat(autoIncrement, 0, 1, FunctionCode.WriteMultipleRegisters, ModbusConnection.Action.ToWrite,2, new byte[] { 0, 2, 4, 0, 10, 1, 2 });
+             connectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 20, new byte[] { 0, 40 }, new byte[] { 205, 01 }, new byte[] { 125, 20 });
+           //  connectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 2, new byte[] { 0, 3}, new byte[] { 0,10}, new byte[] { 1, 2 }, new byte[] { 1, 2 });
         }
     }
 }

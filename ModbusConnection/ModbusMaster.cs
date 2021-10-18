@@ -17,6 +17,7 @@ namespace ModbusConnection
         TcpClient MasterClient;
         NetworkStream _streamFromServer = default;
         bool closed = false;
+        int autoIncrement = 0;
         private bool _ToConnect;
 
         public bool ToConnect
@@ -130,17 +131,18 @@ namespace ModbusConnection
         /// <param name="FunctionCode">what to do</param>
         /// <param name="StartAddress">buffer</param>
         /// <param name="data">data to send</param>
-        public void SendMsgFormat(int transactionID, int protocolID, int SlaveID, FunctionCode FunctionCode,Action action, int StartAddress, byte[] data)
+        public void SendWriteSingleCoilMsgFormat(int SlaveID, int StartAddress, byte[] data)
         {
+            autoIncrement++;
             SENDRequest(new SendStruct()
             {
-                transactionID = transactionID,
-                protocolID = protocolID,
+                transactionID = autoIncrement,
+                protocolID = 0,
                 Address = SlaveID,
-                FunctionCode = (int)FunctionCode,
+                FunctionCode = (int)FunctionCode.WriteSingleCoil,
                 StartAddress = StartAddress,
                 data = data,                                  ///陣列長度
-                ToActLike = action
+                dataLength = data.Length,
             });
         }
         /// <param name="transactionID">autoIncrement</param>
@@ -149,38 +151,185 @@ namespace ModbusConnection
         /// <param name="FunctionCode">what to do</param>
         /// <param name="StartAddress">buffer</param>
         /// <param name="data">data to send</param>
-        public void ReadCoilsCommand_SendMsgFormat(int transactionID, int protocolID, int SlaveID, FunctionCode FunctionCode, Action action, int StartAddress, int numberOfDataToRead)
+        public void SendWriteSingleRegisterMsgFormat(int SlaveID, int StartAddress, byte[] data)
         {
+            autoIncrement++;
             SENDRequest(new SendStruct()
             {
-                transactionID = transactionID,
-                protocolID = protocolID,
+                transactionID = autoIncrement,
+                protocolID = 0,
                 Address = SlaveID,
-                FunctionCode = (int)FunctionCode,
+                FunctionCode = (int)FunctionCode.WriteSingleRegister,
                 StartAddress = StartAddress,
-                data = numberOfDataToRead.SplitIntToHighAndLowByte(),  /// 直接抓取實際數量
-                ToActLike = action
+                data = data,                                  ///陣列長度
+                dataLength = data.Length,
+            });
+        }
+        /// <param name="transactionID">autoIncrement</param>
+        /// <param name="protocolID">0 modbus</param>
+        /// <param name="SlaveID">any</param>
+        /// <param name="FunctionCode">what to do</param>
+        /// <param name="StartAddress">buffer</param>
+        /// <param name="data">data to send</param>
+        public void SendWriteMultipleCoilsMsgFormat(int SlaveID, int StartAddress, byte[] outPutQuantityHighLowBit, params byte[][] multiOutputData)
+        {
+            autoIncrement++;
+            var highbit = Convert.ToString(outPutQuantityHighLowBit[0], 2).PadLeft(8, '0');
+            var lowbit = Convert.ToString(outPutQuantityHighLowBit[1], 2).PadLeft(8, '0');
+            var combined = highbit + lowbit;
+            var quantityOutput = Convert.ToInt32(combined, 2);
+            var N = quantityOutput / 8;
+            var remainder = quantityOutput % 8;
+            if (remainder != 0)
+            {
+                N += 1;
+            }
+            if (quantityOutput < (multiOutputData.Count() * 2 * 8))
+            {
+                return;
+            }
+            byte[] data = new byte[3 + N + 1];
+            int i = 0;
+            for (; i < outPutQuantityHighLowBit.Length; i++)
+            {
+                data[i] = outPutQuantityHighLowBit[i];
+            }
+            data[i] = Convert.ToByte(N);
+            i++;
+            for (int y = 0; y < multiOutputData.Count(); y++)
+            {
+                for (int x = 0; x < multiOutputData[y].Length; x++)
+                {
+                    data[i] = multiOutputData[y][x];
+                    i++;
+                }
+            }
+            SENDRequest(new SendStruct()
+            {
+                transactionID = autoIncrement,
+                protocolID = 0,
+                Address = SlaveID,
+                FunctionCode = (int)FunctionCode.WriteMultipleCoils,
+                StartAddress = StartAddress,
+                data = data,                                  ///陣列長度
+                dataLength = data.Length,
+            });
+        }
+
+        /// <param name="transactionID">autoIncrement</param>
+        /// <param name="protocolID">0 modbus</param>
+        /// <param name="SlaveID">any</param>
+        /// <param name="FunctionCode">what to do</param>
+        /// <param name="StartAddress">buffer</param>
+        /// <param name="data">data to send</param>
+        public void SendWriteMultipleRegistersMsgFormat(int SlaveID, int StartAddress, byte[] quantityHighLowBit, params byte[][] multipleData)
+        {
+            autoIncrement++;
+            var highbit = Convert.ToString(quantityHighLowBit[0], 2).PadLeft(8, '0');
+            var lowbit = Convert.ToString(quantityHighLowBit[1], 2).PadLeft(8, '0');
+            var combined = highbit + lowbit;
+            var final = Convert.ToInt32(combined, 2);
+            byte[] data = new byte[(2 * multipleData.Count()) + 3];
+            int i = 0;
+            for (; i < quantityHighLowBit.Length; i++)
+            {
+                data[i] = quantityHighLowBit[i];
+            }
+            data[i] = Convert.ToByte(2 * final);
+            i++;
+            for (int y = 0; y < multipleData.Count(); y++)
+            {
+                for (int x = 0; x < multipleData[y].Length; x++)
+                {
+                    data[i] = multipleData[y][x];
+                    i++;
+                }
+            }
+            SENDRequest(new SendStruct()
+            {
+                transactionID = autoIncrement,
+                protocolID = 0,
+                Address = SlaveID,
+                FunctionCode = (int)FunctionCode.WriteMultipleRegisters,
+                StartAddress = StartAddress,
+                data = data,                                  ///陣列長度
+                dataLength = data.Length,
+            });
+        }
+
+        /// <param name="transactionID">autoIncrement</param>
+        /// <param name="protocolID">0 modbus</param>
+        /// <param name="SlaveID">any</param>
+        /// <param name="FunctionCode">what to do</param>
+        /// <param name="StartAddress">buffer</param>
+        /// <param name="data">data to send</param>
+        public void ReadCoilsCommand_SendMsgFormat(int SlaveID, int StartAddress, int numberOfDataToRead)
+        {
+            autoIncrement++;
+            var gotByteData = numberOfDataToRead.SplitIntToHighAndLowByte();
+            SENDRequest(new SendStruct()
+            {
+                transactionID = autoIncrement,
+                protocolID = 0,
+                Address = SlaveID,
+                FunctionCode = (int)FunctionCode.ReadCoils,
+                StartAddress = StartAddress,
+                data = gotByteData,  /// 直接抓取實際數量
+                dataLength = gotByteData.Length.SplitIntToHighAndLowByte().Length,
+            });
+        }
+        /// <param name="transactionID">autoIncrement</param>
+        /// <param name="protocolID">0 modbus</param>
+        /// <param name="SlaveID">any</param>
+        /// <param name="FunctionCode">what to do</param>
+        /// <param name="StartAddress">buffer</param>
+        /// <param name="data">data to send</param>
+        public void ReadDiscreteInputs_SendMsgFormat(int SlaveID, int StartAddress, int numberOfDataToRead)
+        {
+            autoIncrement++;
+            var gotByteData = numberOfDataToRead.SplitIntToHighAndLowByte();
+            SENDRequest(new SendStruct()
+            {
+                transactionID = autoIncrement,
+                protocolID = 0,
+                Address = SlaveID,
+                FunctionCode = (int)FunctionCode.ReadDiscreteInputs,
+                StartAddress = StartAddress,
+                data = gotByteData,  /// 直接抓取實際數量
+                dataLength = gotByteData.Length.SplitIntToHighAndLowByte().Length,
+            });
+        }
+        /// <param name="transactionID">autoIncrement</param>
+        /// <param name="protocolID">0 modbus</param>
+        /// <param name="SlaveID">any</param>
+        /// <param name="FunctionCode">what to do</param>
+        /// <param name="StartAddress">buffer</param>
+        /// <param name="data">data to send</param>
+        public void ReadHoldingRegister_SendMsgFormat(int SlaveID, int StartAddress, int numberOfDataToRead)
+        {
+            autoIncrement++;
+            var gotByteData = numberOfDataToRead.SplitIntToHighAndLowByte();
+            SENDRequest(new SendStruct()
+            {
+                transactionID = autoIncrement,
+                protocolID = 0,
+                Address = SlaveID,
+                FunctionCode = (int)FunctionCode.ReadHoldingRegisters,
+                StartAddress = StartAddress,
+                data = gotByteData,  /// 直接抓取實際數量
+                dataLength = gotByteData.Length.SplitIntToHighAndLowByte().Length,
             });
         }
         public void SENDRequest(SendStruct obj)
         {
-            byte[] lengthTotal=null;
+            byte[] lengthTotal = null;
             var highAndLowBit = obj.transactionID.SplitIntToHighAndLowByte();
             var highAndLowBitProtocol = obj.protocolID.SplitIntToHighAndLowByte();
             var highAndLowBitAddress = new byte[] { Convert.ToByte(obj.Address) };
             var highAndLowBitFunction = new byte[] { Convert.ToByte(obj.FunctionCode) };
             var highAndLowBitStartAddress = obj.StartAddress.SplitIntToHighAndLowByte();
-            //  var mLength = highAndLowBitAddress.Length + highAndLowBitFunction.Length + highAndLowBitStartAddress.Length + dataCount.Length;//obj.data.Length;           
-            switch (obj.ToActLike)
-            {
-                case Action.ToRead:
-                    var dataCount = obj.data.Length.SplitIntToHighAndLowByte(); ///陣列長度
-                    lengthTotal = (highAndLowBitAddress.Length + highAndLowBitFunction.Length + highAndLowBitStartAddress.Length + dataCount.Length).SplitIntToHighAndLowByte();//+ dataCount.Length obj.data.Length
-                    break;
-                case Action.ToWrite:
-                    lengthTotal = (highAndLowBitAddress.Length + highAndLowBitFunction.Length + highAndLowBitStartAddress.Length + obj.data.Length).SplitIntToHighAndLowByte();//+ dataCount.Length obj.data.Length
-                    break;
-            }
+            lengthTotal = (highAndLowBitAddress.Length + highAndLowBitFunction.Length + highAndLowBitStartAddress.Length + obj.dataLength).SplitIntToHighAndLowByte();//+ dataCount.Length obj.data.Length
+
             List<byte[]> tmp = new List<byte[]>();
             List<byte> tmpByteArray = new List<byte>();
             var result = Header_PDU_Data(new CommandStruct()
@@ -192,8 +341,8 @@ namespace ModbusConnection
                 FunctionCode = highAndLowBitFunction,
                 StartAddress = highAndLowBitStartAddress,
                 DataCount = obj.data,
-                 //DataCount = dataCount,
-                 // data = obj.data,
+                //DataCount = dataCount,
+                // data = obj.data,
             });
 
             result.ForEach(x =>
@@ -224,7 +373,7 @@ namespace ModbusConnection
             headerList.Add(Tuple.Create(StaticVarSharedClass.FunctionCode, obj.FunctionCode));
             headerList.Add(Tuple.Create(StaticVarSharedClass.StartRegisterAdd, obj.StartAddress));
             headerList.Add(Tuple.Create(StaticVarSharedClass.DataCount, obj.DataCount));
-           // headerList.Add(Tuple.Create(StaticVarSharedClass.Data, obj.data));
+            // headerList.Add(Tuple.Create(StaticVarSharedClass.Data, obj.data));
             return headerList;
         }
         private void ConnectCallBack(IAsyncResult ar)
