@@ -19,13 +19,11 @@ namespace ModbusTesting
         }
         private void ToSend(Object e)
         {
-            ///connectionEstablishment.SENDMsgFormat(autoIncrement, 0, 1, FunctionCode.WriteMultipleRegister, 200, new byte[] { 20, 30 });
             // connectionEstablishment.ReadCoilsCommand_SendMsgFormat(1, 20, 19);
             // connectionEstablishment.ReadDiscreteInputs_SendMsgFormat(1, 197, 22);
             // connectionEstablishment.ReadHoldingRegister_SendMsgFormat(1, 108, 3);
             //  connectionEstablishment.SendWriteSingleCoilMsgFormat(1, 173, new byte[] { 255, 0 });
             // connectionEstablishment.SendWriteSingleRegisterMsgFormat(1, 1, new byte[] { 3,3 });
-            //var asdasda = (byte)FunctionCode.WriteMultipleCoils;
              connectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 20, new byte[] { 0, 40 }, new byte[] { 205, 01 }, new byte[] { 125, 20 });
            //  connectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 2, new byte[] { 0, 3}, new byte[] { 0,10}, new byte[] { 1, 2 }, new byte[] { 1, 2 });
         }
