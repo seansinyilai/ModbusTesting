@@ -22,5 +22,14 @@ namespace ModbusConnection
             tmp[1] = Convert.ToByte(Convert.ToInt32(lowbit, 2));
             return tmp;
         }
+        public static string ReverseString(this string val) 
+        {
+            string tmp = string.Empty;
+            for (int i = val.Length-1; i > 0 ; i--)
+            {
+                tmp += val[i];
+            }
+            return tmp;
+        }
     }
 }
