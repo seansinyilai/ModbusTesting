@@ -10,34 +10,62 @@ using System.Windows.Threading;
 
 namespace ModbusConnection
 {
-    public class ModbusMaster
+    public class ModbusMaster : ObservableObject
     {
+
+        public event Action<bool> ConnectionStatusChanged;
         DispatcherTimer tikTok;
         Task RunReadMessageThread;
         TcpClient MasterClient;
         NetworkStream _streamFromServer = default;
         bool closed = false;
         int autoIncrement = 0;
+        List<string> valueList;
+        List<string> bitsList;
+        List<string> discreteBitList;
         private bool _ToConnect;
 
         public bool ToConnect
         {
             get { return _ToConnect; }
-            set { _ToConnect = value; }
+            set
+            {
+                _ToConnect = value;
+                NotifyPropertyChanged();
+            }
         }
         private string _hostIP;
 
         public string HostIP
         {
             get { return _hostIP; }
-            set { _hostIP = value; }
+            set
+            {
+                _hostIP = value;
+                NotifyPropertyChanged();
+            }
         }
         private int _port;
 
         public int Port
         {
             get { return _port; }
-            set { _port = value; }
+            set
+            {
+                _port = value;
+                NotifyPropertyChanged();
+            }
+        }
+        private string response;
+
+        public string Response
+        {
+            get { return response; }
+            set
+            {
+                response = value;
+                NotifyPropertyChanged();
+            }
         }
 
         public ModbusMaster(string hostIP, int port)
@@ -48,15 +76,23 @@ namespace ModbusConnection
             RunReadMessageThread.Start();
             tikTok = new DispatcherTimer();
             tikTok.Tick += new EventHandler(timeCycle);
-            tikTok.Interval = new TimeSpan(0, 0, 0, 10);
+            tikTok.Interval = new TimeSpan(0, 0, 0, 5);
             tikTok.Start();
 
         }
 
         private void timeCycle(object sender, EventArgs e)
         {
-            byte[] data = new byte[] { 0x00, 0x0f, 0x00, 0x00, 0x00, 0x06, 0x01, 0x04, 0x00, 0x00, 0x00, 0x01 };
-            //    MasterClient.Client.Send(data);
+            try
+            {
+                byte[] data = new byte[] { 0x00, 0x0f, 0x00, 0x00, 0x00, 0x06, 0x01, 0x04, 0x00, 0x00, 0x00, 0x01 };
+                MasterClient.Client.Send(data);
+            }
+            catch (Exception ex)
+            {
+                MasterClient.Client.Close();
+                TcpToConnect(HostIP, Port);
+            }
         }
 
         private void TcpToConnect(string hostIP, int port)
@@ -72,148 +108,216 @@ namespace ModbusConnection
         {
             while (true)
             {
-                try
+                SpinWait.SpinUntil(() => false, 100);
+                if (!ToConnect && !closed)
                 {
-                    SpinWait.SpinUntil(() => false, 100);
-                    if (!ToConnect && !closed)
-                    {
-                        closed = true;
-                        TcpToConnect(HostIP, Port);
-                    }
-                    if (MasterClient.Connected)
-                    {
-                        if (MasterClient.Available > 0)
-                        {   // var c = _streamFromServer.Read(buff, 0, buff.Length);
-                            // string temp = Encoding.ASCII.GetString(buff, 0, buff.Length).Trim((char)0);
-                            DateTime RecvTime = DateTime.Now;
-                            _streamFromServer = MasterClient.GetStream();
-                            byte[] buff = new byte[MasterClient.ReceiveBufferSize];
-                            MasterClient.Client.Receive(buff);
-                            int length = buff[5];
-                            byte[] datashow = new byte[length + 6];//定義所要顯示的接收的數據的長度  
-                            for (int i = 0; i <= length + 5; i++)//將要顯示的數據存放到數組datashow中  
+                    closed = true;
+                    TcpToConnect(HostIP, Port);
+                }
+                if (MasterClient.Connected)
+                {
+                    if (MasterClient.Available > 0)
+                    {   // var c = _streamFromServer.Read(buff, 0, buff.Length);
+                        // string temp = Encoding.ASCII.GetString(buff, 0, buff.Length).Trim((char)0);
+                        DateTime RecvTime = DateTime.Now;
+                        _streamFromServer = MasterClient.GetStream();
+                        byte[] buff = new byte[MasterClient.ReceiveBufferSize];
+                        MasterClient.Client.Receive(buff);
+                        int length = buff[5];
+                        byte[] datashow = new byte[length + 6];//定義所要顯示的接收的數據的長度  
+                        for (int i = 0; i <= length + 5; i++)//將要顯示的數據存放到數組datashow中  
+                        {
+                            datashow[i] = buff[i];
+                        }
+                        byte[] myObjArray = new byte[datashow.Length];
+                        Array.Copy(datashow, myObjArray, datashow.Length);
+                        string stringdata = BitConverter.ToString(datashow);//把數組轉換成16
+                        var ErrorResult = CheckingErrorCode(myObjArray[7], myObjArray[8]);
+                        if (string.IsNullOrEmpty(ErrorResult) || string.IsNullOrWhiteSpace(ErrorResult))
+                        {
+                            //00-01-00-00-00-06-01-01-03-CD-6B-05
+                            //00-02-00-00-00-06-01-02-03-AC-DB-35
+                            //00-02-00-00-00-09-01-03-06-02-2B-00-00-00-64
+                            //00-01-00-00-00-06-01-05-00-AD-FF-00
+                            //00-01-00-00-00-06-01-06-00-01-00-03
+                            //00-02-00-00-00-06-01-0F-00-14-00-0A
+                            //00-02-00-00-00-06-01-10-00-02-00-02
+                            //00-02-00-00-00-06-01-0F-00-14-00-28
+
+                            var splitString = stringdata.Split('-');
+                            int convertedFunctionCode = int.Parse(splitString[7], System.Globalization.NumberStyles.HexNumber);
+                            var functionCode = (FunctionCode)convertedFunctionCode;
+                            Response = string.Empty;
+                            switch (functionCode)
                             {
-                                datashow[i] = buff[i];
+                                case FunctionCode.ReadCoils:
+                                    {
+                                        int byteCount = int.Parse(splitString[8], System.Globalization.NumberStyles.HexNumber);
+                                        var byteCountbits = Convert.ToString(byteCount, 2).PadLeft(8, '0');
+                                        var quantityCount = Convert.ToInt32(byteCountbits, 2);
+                                        if (bitsList != null) bitsList.Clear();
+                                        bitsList = new List<string>();
+                                        string temp = string.Empty;
+                                        for (int i = 0; i < quantityCount; i++)
+                                        {
+                                            int outputStatusSection = int.Parse(splitString[9 + i], System.Globalization.NumberStyles.HexNumber);
+                                            var outputStatusSectionBit = Convert.ToString(outputStatusSection, 2).PadLeft(8, '0').ReverseString();
+                                            for (int j = 0; j < outputStatusSectionBit.Length; j++)
+                                            {
+                                                bitsList.Add(outputStatusSectionBit[j].ToString());
+                                            };
+                                        }
+                                        bitsList.ForEach(bit =>
+                                        {
+                                            temp += bit;
+                                        });
+                                        Response = string.Format("Func:{0};Bits:{1};Quantity:{2}", functionCode.ToString(), temp, quantityCount);
+                                        Console.WriteLine(Response);
+                                    }
+                                    break;
+                                case FunctionCode.ReadDiscreteInputs:
+                                    {
+                                        int byteCount = int.Parse(splitString[8], System.Globalization.NumberStyles.HexNumber);
+                                        var byteCountbits = Convert.ToString(byteCount, 2).PadLeft(8, '0');
+                                        var quantityCount = Convert.ToInt32(byteCountbits, 2);
+                                        if (discreteBitList != null) discreteBitList.Clear();
+                                        discreteBitList = new List<string>();
+                                        string temp = string.Empty;
+                                        for (int i = 0; i < quantityCount; i++)
+                                        {
+                                            int outputStatusSection = int.Parse(splitString[9 + i], System.Globalization.NumberStyles.HexNumber);
+                                            var outputStatusSectionBit = Convert.ToString(outputStatusSection, 2).PadLeft(8, '0').ReverseString();
+                                            for (int j = 0; j < outputStatusSectionBit.Length; j++)
+                                            {
+                                                discreteBitList.Add(outputStatusSectionBit[j].ToString());
+                                            };
+                                        }
+                                        discreteBitList.ForEach(bit =>
+                                        {
+                                            temp += bit;
+                                        });
+                                        Response = string.Format("Func:{0};Bits:{1};Quantity:{2}", functionCode.ToString(), temp, quantityCount);
+                                        Console.WriteLine(Response);
+                                    }
+                                    break;
+                                case FunctionCode.ReadHoldingRegisters:
+                                    {
+                                        int byteCount = int.Parse(splitString[8], System.Globalization.NumberStyles.HexNumber);
+                                        if (valueList != null) valueList.Clear();
+                                        valueList = new List<string>();
+                                        int idx = 0;
+                                        string listOfValues = string.Empty;
+                                        for (int i = 0; i < byteCount / 2; i++)
+                                        {
+                                            int registerHigh = int.Parse(splitString[9 + i + idx], System.Globalization.NumberStyles.HexNumber);
+                                            int registerLow = int.Parse(splitString[10 + i + idx], System.Globalization.NumberStyles.HexNumber);
+                                            var registerHighBits = Convert.ToString(registerHigh, 2).PadLeft(8, '0');
+                                            var registerLowBits = Convert.ToString(registerLow, 2).PadLeft(8, '0');
+                                            var combinedBits = registerHighBits + registerLowBits;
+                                            var value = Convert.ToInt32(combinedBits, 2).ToString();
+                                            valueList.Add(value);
+                                            idx++;
+                                        }
+                                        for (int i = 0; i < valueList.Count; i++)
+                                        {
+                                            listOfValues += valueList[i] + ";";
+                                        }
+                                        Response = string.Format("Func:{0};Count:{1};listOfValues:{2}", functionCode.ToString(), byteCount.ToString(), listOfValues);
+                                        Console.WriteLine(Response);
+                                    }
+                                    break;
+                                case FunctionCode.WriteSingleCoil:
+                                    {
+                                        int outputAddressHigh = int.Parse(splitString[8], System.Globalization.NumberStyles.HexNumber);
+                                        int outputAddressLow = int.Parse(splitString[9], System.Globalization.NumberStyles.HexNumber);
+                                        int outputValueHigh = int.Parse(splitString[10], System.Globalization.NumberStyles.HexNumber);
+                                        int outputValueLow = int.Parse(splitString[11], System.Globalization.NumberStyles.HexNumber);
+
+                                        var outputValueHighbit = Convert.ToString(outputValueHigh, 2).PadLeft(8, '0');
+                                        var outputValueLowbit = Convert.ToString(outputValueLow, 2).PadLeft(8, '0');
+                                        var outputAddrHighbit = Convert.ToString(outputAddressHigh, 2).PadLeft(8, '0');
+                                        var outputAddLowbit = Convert.ToString(outputAddressLow, 2).PadLeft(8, '0');
+
+                                        var combinedOutputValueHigh = outputValueHighbit + outputValueLowbit;
+                                        var combinedOutputAddr = outputAddrHighbit + outputAddLowbit;
+                                        //var OutputValue = Convert.ToInt32(combinedOutputValueHigh, 2);
+                                        var outputAddrOutput = Convert.ToInt32(combinedOutputAddr, 2);
+                                        Response = string.Format("Func:{0};OutputAddr:{1};OutputValue:{2}", functionCode.ToString(), outputAddrOutput, combinedOutputValueHigh);
+                                        Console.WriteLine(Response);
+                                    }
+                                    break;
+                                case FunctionCode.WriteSingleRegister:
+                                    {
+                                        int registerAddressHigh = int.Parse(splitString[8], System.Globalization.NumberStyles.HexNumber);
+                                        int registerAddressLow = int.Parse(splitString[9], System.Globalization.NumberStyles.HexNumber);
+                                        int registerValueHigh = int.Parse(splitString[10], System.Globalization.NumberStyles.HexNumber);
+                                        int registerValueLow = int.Parse(splitString[11], System.Globalization.NumberStyles.HexNumber);
+
+                                        var registerValueHighbit = Convert.ToString(registerValueHigh, 2).PadLeft(8, '0');
+                                        var registerValueLowbit = Convert.ToString(registerValueLow, 2).PadLeft(8, '0');
+                                        var registerAddrHighbit = Convert.ToString(registerAddressHigh, 2).PadLeft(8, '0');
+                                        var registerAddLowbit = Convert.ToString(registerAddressLow, 2).PadLeft(8, '0');
+
+                                        var combinedregisterValueHigh = registerValueHighbit + registerValueLowbit;
+                                        var combinedregisterAddr = registerAddrHighbit + registerAddLowbit;
+                                       // var registerValue = Convert.ToInt32(combinedregisterValueHigh, 2);
+                                        var registerAddrregister = Convert.ToInt32(combinedregisterAddr, 2);
+                                        Response = string.Format("Func:{0};RegisterAddr:{1};RegisterValue:{2}", functionCode.ToString(), registerAddrregister, combinedregisterValueHigh);
+                                        Console.WriteLine(Response);
+                                    }
+                                    break;
+                                case FunctionCode.WriteMultipleCoils:
+                                    {
+                                        //00-02-00-00-00-06-01-0F-00-14-00-28
+                                        int startAddressHigh = int.Parse(splitString[8], System.Globalization.NumberStyles.HexNumber);
+                                        int startAddressLow = int.Parse(splitString[9], System.Globalization.NumberStyles.HexNumber);
+                                        int quantityOutputHigh = int.Parse(splitString[10], System.Globalization.NumberStyles.HexNumber);
+                                        int quantityOutputLow = int.Parse(splitString[11], System.Globalization.NumberStyles.HexNumber);
+
+                                        var quantityHighbit = Convert.ToString(quantityOutputHigh, 2).PadLeft(8, '0');
+                                        var quantityLowbit = Convert.ToString(quantityOutputLow, 2).PadLeft(8, '0');
+                                        var startAddHighbit = Convert.ToString(startAddressHigh, 2).PadLeft(8, '0');
+                                        var startAddLowbit = Convert.ToString(startAddressLow, 2).PadLeft(8, '0');
+
+                                        var combinedQuantityHigh = quantityHighbit + quantityLowbit;
+                                        var combinedStartAdd = startAddHighbit + startAddLowbit;
+                                        var quantityOutput = Convert.ToInt32(combinedQuantityHigh, 2);
+                                        var startAddOutput = Convert.ToInt32(combinedStartAdd, 2);
+                                        Response = string.Format("Func:{0};StartAddr:{1};Quantity:{2}", functionCode.ToString(), startAddOutput, quantityOutput);
+                                        Console.WriteLine(Response);
+                                    }
+                                    break;
+                                case FunctionCode.WriteMultipleRegisters:
+                                    {
+                                        int startAddressHigh = int.Parse(splitString[8], System.Globalization.NumberStyles.HexNumber);
+                                        int startAddressLow = int.Parse(splitString[9], System.Globalization.NumberStyles.HexNumber);
+                                        int quantityOfRegisterHigh = int.Parse(splitString[10], System.Globalization.NumberStyles.HexNumber);
+                                        int quantityOfRegisterLow = int.Parse(splitString[11], System.Globalization.NumberStyles.HexNumber);
+
+                                        var quantityHighbit = Convert.ToString(quantityOfRegisterHigh, 2).PadLeft(8, '0');
+                                        var quantityLowbit = Convert.ToString(quantityOfRegisterLow, 2).PadLeft(8, '0');
+                                        var startAddHighbit = Convert.ToString(startAddressHigh, 2).PadLeft(8, '0');
+                                        var startAddLowbit = Convert.ToString(startAddressLow, 2).PadLeft(8, '0');
+
+                                        var combinedQuantity = quantityHighbit + quantityLowbit;
+                                        var combinedStartAdd = startAddHighbit + startAddLowbit;
+
+                                        var quantityOutput = Convert.ToInt32(combinedQuantity, 2);
+                                        var startAddOutput = Convert.ToInt32(combinedStartAdd, 2);
+                                        Response = string.Format("Func:{0};StartAddr:{1};Quantity:{2}", functionCode.ToString(), startAddOutput, quantityOutput);
+                                        Console.WriteLine(Response);
+                                    }
+                                    break;
+                                default:
+                                    break;
                             }
-                            byte[] myObjArray = new byte[datashow.Length];
-                            Array.Copy(datashow, myObjArray, datashow.Length);
-                            string stringdata = BitConverter.ToString(datashow);//把數組轉換成16
-                            var ErrorResult = CheckingErrorCode(myObjArray[7], myObjArray[8]);
-                            if (string.IsNullOrEmpty(ErrorResult) || string.IsNullOrWhiteSpace(ErrorResult))
-                            {
-                                //00-01-00-00-00-06-01-01-03-CD-6B-05
-                                //00-02-00-00-00-06-01-02-03-AC-DB-35
-                                //00-02-00-00-00-09-01-03-06-02-2B-00-00-00-64
-                                //00-01-00-00-00-06-01-05-00-AD-FF-00
-                                //00-01-00-00-00-06-01-06-00-01-00-03
-                                //00-02-00-00-00-06-01-0F-00-14-00-0A
-                                //00-02-00-00-00-06-01-10-00-02-00-02
-                                //00-02-00-00-00-06-01-0F-00-14-00-28
-
-                                var splitString = stringdata.Split('-');
-                                int convertedFunctionCode = int.Parse(splitString[7], System.Globalization.NumberStyles.HexNumber);
-                                var functionCode = (FunctionCode)convertedFunctionCode;
-                                string response = string.Empty;
-                                switch (functionCode)
-                                {
-                                    case FunctionCode.ReadCoils:
-                                        {
-                                            int byteCount = int.Parse(splitString[8], System.Globalization.NumberStyles.HexNumber);
-                                            int outputStatusSection1 = int.Parse(splitString[9], System.Globalization.NumberStyles.HexNumber);
-                                            int outputStatusSection2 = int.Parse(splitString[10], System.Globalization.NumberStyles.HexNumber);
-                                            int outputStatusSection3 = int.Parse(splitString[11], System.Globalization.NumberStyles.HexNumber);
-
-                                            var byteCountbits = Convert.ToString(byteCount, 2).PadLeft(8, '0');
-                                            var quantityCount = Convert.ToInt32(byteCountbits, 2);
-                                            var outputStatusSection1bit = Convert.ToString(outputStatusSection1, 2).PadLeft(8, '0');
-                                            var outputStatusSection2bit = Convert.ToString(outputStatusSection2, 2).PadLeft(8, '0');
-                                            var outputStatusSection3bit = Convert.ToString(outputStatusSection3, 2).PadLeft(8, '0');
-                                            outputStatusSection1bit = outputStatusSection1bit.ReverseString();
-                                            outputStatusSection2bit = outputStatusSection2bit.ReverseString();
-                                            outputStatusSection3bit = outputStatusSection3bit.ReverseString();
-
-                                            response = string.Format("Func:{0}; Bits:{1};Quantity:{2}", functionCode.ToString(), "\n" + outputStatusSection1bit + "\n" + outputStatusSection2bit + "\n" + outputStatusSection3bit + "\n", quantityCount);
-                                            Console.WriteLine(response);
-                                        }
-                                        break;
-                                    case FunctionCode.ReadDiscreteInputs:
-                                        {
-                                            int byteCount = int.Parse(splitString[8], System.Globalization.NumberStyles.HexNumber);
-                                            int outputStatusSection1 = int.Parse(splitString[9], System.Globalization.NumberStyles.HexNumber);
-                                            int outputStatusSection2 = int.Parse(splitString[10], System.Globalization.NumberStyles.HexNumber);
-                                            int outputStatusSection3 = int.Parse(splitString[11], System.Globalization.NumberStyles.HexNumber);
-
-                                            var byteCountbits = Convert.ToString(byteCount, 2).PadLeft(8, '0');
-                                            var quantityCount = Convert.ToInt32(byteCountbits, 2);
-                                            var outputStatusSection1bit = Convert.ToString(outputStatusSection1, 2).PadLeft(8, '0');
-                                            var outputStatusSection2bit = Convert.ToString(outputStatusSection2, 2).PadLeft(8, '0');
-                                            var outputStatusSection3bit = Convert.ToString(outputStatusSection3, 2).PadLeft(8, '0');
-                                            outputStatusSection1bit = outputStatusSection1bit.ReverseString();
-                                            outputStatusSection2bit = outputStatusSection2bit.ReverseString();
-                                            outputStatusSection3bit = outputStatusSection3bit.ReverseString();
-
-                                            response = string.Format("Func:{0}; Bits:{1};Quantity:{2}", functionCode.ToString(), "\n" + outputStatusSection1bit + "\n" + outputStatusSection2bit + "\n" + outputStatusSection3bit + "\n", quantityCount);
-                                            Console.WriteLine(response);
-                                        }
-                                        break;
-                                    case FunctionCode.ReadHoldingRegisters:
-                                        {
-                                            int byteCount = int.Parse(splitString[8], System.Globalization.NumberStyles.HexNumber);
-                                            int startAddressLow = int.Parse(splitString[9], System.Globalization.NumberStyles.HexNumber);
-                                            int quantityOutputHigh = int.Parse(splitString[10], System.Globalization.NumberStyles.HexNumber);
-
-                                            // 21060028
-                                            // 慶頂 
-                                            // PLC 模組 記憶卡CF 2G 1個
-                                            // C 語言模組  0919543899
-                                        }
-
-                                        break;
-                                    case FunctionCode.ReadInputRegisters:
-                                        break;
-                                    case FunctionCode.WriteSingleCoil:
-                                        break;
-                                    case FunctionCode.WriteSingleRegister:
-                                        break;
-                                    case FunctionCode.WriteMultipleCoils:
-                                        {
-                                            //00-02-00-00-00-06-01-0F-00-14-00-28
-                                            int startAddressHigh = int.Parse(splitString[8], System.Globalization.NumberStyles.HexNumber);
-                                            int startAddressLow = int.Parse(splitString[9], System.Globalization.NumberStyles.HexNumber);
-                                            int quantityOutputHigh = int.Parse(splitString[10], System.Globalization.NumberStyles.HexNumber);
-                                            int quantityOutputLow = int.Parse(splitString[11], System.Globalization.NumberStyles.HexNumber);
-
-                                            var quantityHighbit = Convert.ToString(quantityOutputHigh, 2).PadLeft(8, '0');
-                                            var quantityLowbit = Convert.ToString(quantityOutputLow, 2).PadLeft(8, '0');
-                                            var startAddHighbit = Convert.ToString(startAddressHigh, 2).PadLeft(8, '0');
-                                            var startAddLowbit = Convert.ToString(startAddressLow, 2).PadLeft(8, '0');
-
-                                            var combinedQuantityHigh = quantityHighbit + quantityLowbit;
-                                            var combinedStartAdd = startAddHighbit + startAddLowbit;
-                                            var quantityOutput = Convert.ToInt32(combinedQuantityHigh, 2);
-                                            var startAddOutput = Convert.ToInt32(combinedStartAdd, 2);
-                                            response = string.Format("Func:{0}; StartAddr:{1};Quantity:{2}", functionCode.ToString(), startAddOutput, quantityOutput);
-                                        }
-                                        break;
-                                    case FunctionCode.WriteMultipleRegisters:
-                                        break;
-                                    default:
-                                        break;
-                                }
-                                ReceivedMsg(response);
-                            }
-                            else
-                            {
-                                //ReadCoilsError;IllegalDataValue
-
-                            }
+                            ReceivedMsg(Response);
+                        }
+                        else
+                        {//ReadCoilsError;IllegalDataValue
+                            ReceivedMsg(ErrorResult);
                         }
                     }
-                }
-                catch (Exception e)
-                {
-                    MasterClient.Client.Close();
-                    TcpToConnect(HostIP, Port);
                 }
             }
         }
@@ -474,12 +578,14 @@ namespace ModbusConnection
             if (MasterClient.Connected && ToConnect)
             {
                 ToConnect = true;
+                ConnectionStatusChanged?.Invoke(ToConnect);
             }
             else
             {
                 _streamFromServer?.Close();
                 closed = false;
                 ToConnect = false;
+                ConnectionStatusChanged?.Invoke(ToConnect);
             }
         }
         private string CheckingErrorCode(byte er, byte ex)
@@ -518,16 +624,16 @@ namespace ModbusConnection
                             exString = string.Empty;
                     }
                     break;
-                case ErrorCode.ReadInputRegistersError:
-                    {
-                        ecFlag = true;
-                        var result = CheckingException(ex);
-                        if (!string.IsNullOrEmpty(result) && !string.IsNullOrWhiteSpace(result))
-                            exString = result;
-                        else
-                            exString = string.Empty;
-                    }
-                    break;
+                //case ErrorCode.ReadInputRegistersError:
+                //    {
+                //        ecFlag = true;
+                //        var result = CheckingException(ex);
+                //        if (!string.IsNullOrEmpty(result) && !string.IsNullOrWhiteSpace(result))
+                //            exString = result;
+                //        else
+                //            exString = string.Empty;
+                //    }
+                //    break;
                 case ErrorCode.WriteSingleCoilError:
                     {
                         ecFlag = true;

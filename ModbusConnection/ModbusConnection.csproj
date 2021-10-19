@@ -45,6 +45,7 @@
     <Compile Include="CommandStruct.cs" />
     <Compile Include="FunctionCode.cs" />
     <Compile Include="ModbusMaster.cs" />
+    <Compile Include="ObservableObject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StaticVarSharedClass.cs" />
     <Compile Include="Tools.cs" />

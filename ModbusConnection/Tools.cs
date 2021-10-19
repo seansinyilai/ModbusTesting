@@ -25,7 +25,7 @@ namespace ModbusConnection
         public static string ReverseString(this string val) 
         {
             string tmp = string.Empty;
-            for (int i = val.Length-1; i > 0 ; i--)
+            for (int i = val.Length-1; i >= 0 ; i--)
             {
                 tmp += val[i];
             }
