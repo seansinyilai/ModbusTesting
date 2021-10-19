@@ -12,7 +12,7 @@ namespace ModbusConnection
     /// </summary>
     /// <param name="val"></param>
     /// <returns></returns>
-        public static byte[] SplitIntToHighAndLowByte(this int val) 
+        public static byte[] SplitShortToHighAndLowByte(this ushort val) 
         {
             byte[] tmp = new byte[2];
             string binartsaa = Convert.ToString(val, 2).PadLeft(16, '0');

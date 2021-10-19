@@ -18,8 +18,8 @@ namespace ModbusConnection
         public byte[] data { get; set; }
         public CommandStruct()
         {
-            //transactionID = new byte[2];
-            //protocolID = new byte[2];
+            //TransactionID = new byte[2];
+            //ProtocolID = new byte[2];
             //length = new byte[2];
             //Address = new byte[1];
             //FunctionCode = new byte[1];
@@ -29,11 +29,11 @@ namespace ModbusConnection
     }
     public class SendStruct
     {
-        public int transactionID { get; set; }
-        public int protocolID { get; set; }
-        public int Address { get; set; }
-        public int FunctionCode { get; set; }
-        public int StartAddress { get; set; }
+        public ushort TransactionID { get; set; }
+        public ushort ProtocolID { get; set; }
+        public byte Address { get; set; }
+        public byte FunctionCode { get; set; }
+        public ushort StartAddress { get; set; }
         public Action ToActLike { get; set; }
         public byte[] data { get; set; }
         public int dataLength { get; set; }

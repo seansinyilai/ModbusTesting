@@ -19,7 +19,7 @@ namespace ModbusConnection
         NetworkStream _streamFromServer = default;
         bool closed = false;
         bool _ToConnect;
-        int autoIncrement = 0;
+        ushort autoIncrement = 0;
         List<string> valueList;
         List<string> bitsList;
         List<string> discreteBitList;
@@ -325,15 +325,15 @@ namespace ModbusConnection
         /// <param name="FunctionCode">what to do</param>
         /// <param name="StartAddress">buffer</param>
         /// <param name="data">data to send</param>
-        public void SendWriteSingleCoilMsgFormat(int SlaveID, int StartAddress, byte[] data)
+        public void SendWriteSingleCoilMsgFormat(byte SlaveID, ushort StartAddress, byte[] data)
         {
             autoIncrement++;
             SENDRequest(new SendStruct()
             {
-                transactionID = autoIncrement,
-                protocolID = 0,
+                TransactionID = autoIncrement,
+                ProtocolID = 0,
                 Address = SlaveID,
-                FunctionCode = (int)FunctionCode.WriteSingleCoil,
+                FunctionCode = (byte)FunctionCode.WriteSingleCoil,
                 StartAddress = StartAddress,
                 data = data,                                  ///陣列長度
                 dataLength = data.Length,
@@ -345,15 +345,15 @@ namespace ModbusConnection
         /// <param name="FunctionCode">what to do</param>
         /// <param name="StartAddress">buffer</param>
         /// <param name="data">data to send</param>
-        public void SendWriteSingleRegisterMsgFormat(int SlaveID, int StartAddress, byte[] data)
+        public void SendWriteSingleRegisterMsgFormat(byte SlaveID, ushort StartAddress, byte[] data)
         {
             autoIncrement++;
             SENDRequest(new SendStruct()
             {
-                transactionID = autoIncrement,
-                protocolID = 0,
+                TransactionID = autoIncrement,
+                ProtocolID = 0,
                 Address = SlaveID,
-                FunctionCode = (int)FunctionCode.WriteSingleRegister,
+                FunctionCode = (byte)FunctionCode.WriteSingleRegister,
                 StartAddress = StartAddress,
                 data = data,                                  ///陣列長度
                 dataLength = data.Length,
@@ -365,7 +365,7 @@ namespace ModbusConnection
         /// <param name="FunctionCode">what to do</param>
         /// <param name="StartAddress">buffer</param>
         /// <param name="data">data to send</param>
-        public void SendWriteMultipleCoilsMsgFormat(int SlaveID, int StartAddress, byte[] outPutQuantityHighLowBit, params byte[][] multiOutputData)
+        public void SendWriteMultipleCoilsMsgFormat(byte SlaveID, ushort StartAddress, byte[] outPutQuantityHighLowBit, params byte[][] multiOutputData)
         {
             autoIncrement++;
             var highbit = Convert.ToString(outPutQuantityHighLowBit[0], 2).PadLeft(8, '0');
@@ -400,10 +400,10 @@ namespace ModbusConnection
             }
             SENDRequest(new SendStruct()
             {
-                transactionID = autoIncrement,
-                protocolID = 0,
+                TransactionID = autoIncrement,
+                ProtocolID = 0,
                 Address = SlaveID,
-                FunctionCode = (int)FunctionCode.WriteMultipleCoils,
+                FunctionCode = (byte)FunctionCode.WriteMultipleCoils,
                 StartAddress = StartAddress,
                 data = data,                                  ///陣列長度
                 dataLength = data.Length,
@@ -416,7 +416,7 @@ namespace ModbusConnection
         /// <param name="FunctionCode">what to do</param>
         /// <param name="StartAddress">buffer</param>
         /// <param name="data">data to send</param>
-        public void SendWriteMultipleRegistersMsgFormat(int SlaveID, int StartAddress, byte[] quantityHighLowBit, params byte[][] multipleData)
+        public void SendWriteMultipleRegistersMsgFormat(byte SlaveID, ushort StartAddress, byte[] quantityHighLowBit, params byte[][] multipleData)
         {
             autoIncrement++;
             var highbit = Convert.ToString(quantityHighLowBit[0], 2).PadLeft(8, '0');
@@ -441,10 +441,10 @@ namespace ModbusConnection
             }
             SENDRequest(new SendStruct()
             {
-                transactionID = autoIncrement,
-                protocolID = 0,
+                TransactionID = autoIncrement,
+                ProtocolID = 0,
                 Address = SlaveID,
-                FunctionCode = (int)FunctionCode.WriteMultipleRegisters,
+                FunctionCode = (byte)FunctionCode.WriteMultipleRegisters,
                 StartAddress = StartAddress,
                 data = data,                                  ///陣列長度
                 dataLength = data.Length,
@@ -457,19 +457,19 @@ namespace ModbusConnection
         /// <param name="FunctionCode">what to do</param>
         /// <param name="StartAddress">buffer</param>
         /// <param name="data">data to send</param>
-        public void ReadCoilsCommand_SendMsgFormat(int SlaveID, int StartAddress, int numberOfDataToRead)
+        public void ReadCoilsCommand_SendMsgFormat(byte SlaveID, ushort StartAddress, ushort numberOfDataToRead)
         {
             autoIncrement++;
-            var gotByteData = numberOfDataToRead.SplitIntToHighAndLowByte();
+            var gotByteData = numberOfDataToRead.SplitShortToHighAndLowByte();
             SENDRequest(new SendStruct()
             {
-                transactionID = autoIncrement,
-                protocolID = 0,
+                TransactionID = autoIncrement,
+                ProtocolID = 0,
                 Address = SlaveID,
                 FunctionCode = (int)FunctionCode.ReadCoils,
                 StartAddress = StartAddress,
                 data = gotByteData,  /// 直接抓取實際數量
-                dataLength = gotByteData.Length.SplitIntToHighAndLowByte().Length,
+                dataLength = ((ushort)gotByteData.Length).SplitShortToHighAndLowByte().Length,
             });
         }
         /// <param name="transactionID">autoIncrement</param>
@@ -478,19 +478,19 @@ namespace ModbusConnection
         /// <param name="FunctionCode">what to do</param>
         /// <param name="StartAddress">buffer</param>
         /// <param name="data">data to send</param>
-        public void ReadDiscreteInputs_SendMsgFormat(int SlaveID, int StartAddress, int numberOfDataToRead)
+        public void ReadDiscreteInputs_SendMsgFormat(byte SlaveID, ushort StartAddress, ushort numberOfDataToRead)
         {
             autoIncrement++;
-            var gotByteData = numberOfDataToRead.SplitIntToHighAndLowByte();
+            var gotByteData = numberOfDataToRead.SplitShortToHighAndLowByte();
             SENDRequest(new SendStruct()
             {
-                transactionID = autoIncrement,
-                protocolID = 0,
+                TransactionID = autoIncrement,
+                ProtocolID = 0,
                 Address = SlaveID,
                 FunctionCode = (int)FunctionCode.ReadDiscreteInputs,
                 StartAddress = StartAddress,
                 data = gotByteData,  /// 直接抓取實際數量
-                dataLength = gotByteData.Length.SplitIntToHighAndLowByte().Length,
+                dataLength = ((ushort)gotByteData.Length).SplitShortToHighAndLowByte().Length,
             });
         }
         /// <param name="transactionID">autoIncrement</param>
@@ -499,30 +499,30 @@ namespace ModbusConnection
         /// <param name="FunctionCode">what to do</param>
         /// <param name="StartAddress">buffer</param>
         /// <param name="data">data to send</param>
-        public void ReadHoldingRegister_SendMsgFormat(int SlaveID, int StartAddress, int numberOfDataToRead)
+        public void ReadHoldingRegister_SendMsgFormat(byte SlaveID, ushort StartAddress, ushort numberOfDataToRead)
         {
             autoIncrement++;
-            var gotByteData = numberOfDataToRead.SplitIntToHighAndLowByte();
+            var gotByteData = numberOfDataToRead.SplitShortToHighAndLowByte();
             SENDRequest(new SendStruct()
             {
-                transactionID = autoIncrement,
-                protocolID = 0,
+                TransactionID = autoIncrement,
+                ProtocolID = 0,
                 Address = SlaveID,
                 FunctionCode = (int)FunctionCode.ReadHoldingRegisters,
                 StartAddress = StartAddress,
                 data = gotByteData,  /// 直接抓取實際數量
-                dataLength = gotByteData.Length.SplitIntToHighAndLowByte().Length,
+                dataLength = ((ushort)gotByteData.Length).SplitShortToHighAndLowByte().Length,
             });
         }
         public void SENDRequest(SendStruct obj)
         {
             byte[] lengthTotal = null;
-            var highAndLowBit = obj.transactionID.SplitIntToHighAndLowByte();
-            var highAndLowBitProtocol = obj.protocolID.SplitIntToHighAndLowByte();
+            var highAndLowBit = obj.TransactionID.SplitShortToHighAndLowByte();
+            var highAndLowBitProtocol = obj.ProtocolID.SplitShortToHighAndLowByte();
             var highAndLowBitAddress = new byte[] { Convert.ToByte(obj.Address) };
             var highAndLowBitFunction = new byte[] { Convert.ToByte(obj.FunctionCode) };
-            var highAndLowBitStartAddress = obj.StartAddress.SplitIntToHighAndLowByte();
-            lengthTotal = (highAndLowBitAddress.Length + highAndLowBitFunction.Length + highAndLowBitStartAddress.Length + obj.dataLength).SplitIntToHighAndLowByte();//+ dataCount.Length obj.data.Length
+            var highAndLowBitStartAddress = obj.StartAddress.SplitShortToHighAndLowByte();
+            lengthTotal = ((ushort)(highAndLowBitAddress.Length + highAndLowBitFunction.Length + highAndLowBitStartAddress.Length + obj.dataLength)).SplitShortToHighAndLowByte();//+ dataCount.Length obj.data.Length
 
             List<byte[]> tmp = new List<byte[]>();
             List<byte> tmpByteArray = new List<byte>();
