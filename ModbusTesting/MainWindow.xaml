@@ -112,9 +112,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition></RowDefinition>
             </Grid.RowDefinitions>
-            <TextBox IsReadOnly="True" Text="{Binding ConnectionEstablishment.ResponseResult , Mode=OneWay}">
-                
-            </TextBox>
+            <TextBox IsReadOnly="True" Text="{Binding ConnectionEstablishment.ResponseResult , Mode=OneWay}"/>
         </Grid>
     </Grid>
 </Window>

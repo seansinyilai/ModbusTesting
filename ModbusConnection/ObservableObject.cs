@@ -13,12 +13,8 @@ namespace ModbusConnection
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private bool passNotify;
-
         protected void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {
-            if (passNotify) return;
-
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
