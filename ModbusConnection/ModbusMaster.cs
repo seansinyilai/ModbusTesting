@@ -86,7 +86,7 @@ namespace ModbusConnection
                 byte[] data = new byte[] { 0x00, 0x0f, 0x00, 0x00, 0x00, 0x06, 0x01, 0x04, 0x00, 0x00, 0x00, 0x01 };
                 MasterClient.Client.Send(data);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 MasterClient.Client.Close();
                 TcpToConnect(HostIP, Port);
