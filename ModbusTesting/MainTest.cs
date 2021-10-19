@@ -32,6 +32,7 @@ namespace ModbusTesting
         private void SendWriteMultipleRegisters(object obj)
         {
             ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 2, new byte[] { 0, 3 }, new byte[] { 0, 10 }, new byte[] { 1, 2 }, new byte[] { 1, 2 });
+
         }
 
         private void SendWriteMultipleCoils(object obj)

@@ -325,8 +325,15 @@ namespace ModbusConnection
         /// <param name="FunctionCode">what to do</param>
         /// <param name="StartAddress">buffer</param>
         /// <param name="data">data to send</param>
-        public void SendWriteSingleCoilMsgFormat(byte SlaveID, ushort StartAddress, byte[] data)
+        public string SendWriteSingleCoilMsgFormat(byte SlaveID, ushort StartAddress, byte[] data)
         {
+            string result;
+            int mLength = data.Length;
+            if (mLength != 2)
+            {
+                result = "Length of data is invalid !!";
+                return string.Format("Info: {0} Length:{1}", result, mLength.ToString());
+            }
             autoIncrement++;
             SENDRequest(new SendStruct()
             {
@@ -338,6 +345,8 @@ namespace ModbusConnection
                 data = data,                                  ///陣列長度
                 dataLength = data.Length,
             });
+            result = "OK";
+            return result;
         }
         /// <param name="transactionID">autoIncrement</param>
         /// <param name="protocolID">0 modbus</param>
@@ -345,8 +354,15 @@ namespace ModbusConnection
         /// <param name="FunctionCode">what to do</param>
         /// <param name="StartAddress">buffer</param>
         /// <param name="data">data to send</param>
-        public void SendWriteSingleRegisterMsgFormat(byte SlaveID, ushort StartAddress, byte[] data)
+        public string SendWriteSingleRegisterMsgFormat(byte SlaveID, ushort StartAddress, byte[] data)
         {
+            string result;
+            int mLength = data.Length;
+            if (mLength != 2)
+            {
+                result = "Length of data is invalid !!";
+                return string.Format("Info: {0} Length:{1}", result, mLength.ToString());
+            }
             autoIncrement++;
             SENDRequest(new SendStruct()
             {
@@ -358,6 +374,8 @@ namespace ModbusConnection
                 data = data,                                  ///陣列長度
                 dataLength = data.Length,
             });
+            result = "OK";
+            return result;
         }
         /// <param name="transactionID">autoIncrement</param>
         /// <param name="protocolID">0 modbus</param>
@@ -365,8 +383,24 @@ namespace ModbusConnection
         /// <param name="FunctionCode">what to do</param>
         /// <param name="StartAddress">buffer</param>
         /// <param name="data">data to send</param>
-        public void SendWriteMultipleCoilsMsgFormat(byte SlaveID, ushort StartAddress, byte[] outPutQuantityHighLowBit, params byte[][] multiOutputData)
+        public string SendWriteMultipleCoilsMsgFormat(byte SlaveID, ushort StartAddress, byte[] outPutQuantityHighLowBit, params byte[][] multiOutputData)
         {
+            string result;
+            int mLength = outPutQuantityHighLowBit.Length;
+            if (mLength != 2)
+            {
+                result = "Length of data is invalid !!";
+                return string.Format("Info: {0} Length:{1}", result, mLength.ToString());
+            }
+            for (int y = 0; y < multiOutputData.Count(); y++)
+            {
+                int mmLength = multiOutputData[y].Length;
+                if (multiOutputData[y].Length != 2)
+                {
+                    result = "Length of data is invalid !!";
+                    return string.Format("Info: {0} Length:{1}", result, mmLength.ToString());
+                }
+            }
             autoIncrement++;
             var highbit = Convert.ToString(outPutQuantityHighLowBit[0], 2).PadLeft(8, '0');
             var lowbit = Convert.ToString(outPutQuantityHighLowBit[1], 2).PadLeft(8, '0');
@@ -378,9 +412,10 @@ namespace ModbusConnection
             {
                 N += 1;
             }
-            if (quantityOutput < (multiOutputData.Count() * 2 * 8))
+            if (quantityOutput < (multiOutputData.Count() * 2 * 8))  /// 8 是8個bits
             {
-                return;
+                result = "Length of data is invalid !!";
+                return string.Format("Info: {0} Length:{1}", result, mLength.ToString());
             }
             byte[] data = new byte[3 + N + 1];
             int i = 0;
@@ -408,6 +443,8 @@ namespace ModbusConnection
                 data = data,                                  ///陣列長度
                 dataLength = data.Length,
             });
+            result = "OK";
+            return result;
         }
 
         /// <param name="transactionID">autoIncrement</param>
@@ -416,8 +453,24 @@ namespace ModbusConnection
         /// <param name="FunctionCode">what to do</param>
         /// <param name="StartAddress">buffer</param>
         /// <param name="data">data to send</param>
-        public void SendWriteMultipleRegistersMsgFormat(byte SlaveID, ushort StartAddress, byte[] quantityHighLowBit, params byte[][] multipleData)
+        public string SendWriteMultipleRegistersMsgFormat(byte SlaveID, ushort StartAddress, byte[] quantityHighLowBit, params byte[][] multipleData)
         {
+            string result;
+            int mLength = quantityHighLowBit.Length;
+            if (mLength != 2)
+            {
+                result = "Length of data is invalid !!";
+                return string.Format("Info: {0} Length:{1}", result, mLength.ToString());
+            }
+            for (int y = 0; y < multipleData.Count(); y++)
+            {
+                int mmLength = multipleData[y].Length;
+                if (multipleData[y].Length != 2)
+                {
+                    result = "Length of data is invalid !!";
+                    return string.Format("Info: {0} Length:{1}", result, mmLength.ToString());
+                }
+            }
             autoIncrement++;
             var highbit = Convert.ToString(quantityHighLowBit[0], 2).PadLeft(8, '0');
             var lowbit = Convert.ToString(quantityHighLowBit[1], 2).PadLeft(8, '0');
@@ -449,6 +502,8 @@ namespace ModbusConnection
                 data = data,                                  ///陣列長度
                 dataLength = data.Length,
             });
+            result = "OK";
+            return result;
         }
 
         /// <param name="transactionID">autoIncrement</param>
