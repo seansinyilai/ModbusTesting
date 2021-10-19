@@ -12,19 +12,17 @@ namespace ModbusConnection
 {
     public class ModbusMaster : ObservableObject
     {
-
         public event Action<bool> ConnectionStatusChanged;
         DispatcherTimer tikTok;
         Task RunReadMessageThread;
         TcpClient MasterClient;
         NetworkStream _streamFromServer = default;
         bool closed = false;
+        bool _ToConnect;
         int autoIncrement = 0;
         List<string> valueList;
         List<string> bitsList;
         List<string> discreteBitList;
-        private bool _ToConnect;
-
         public bool ToConnect
         {
             get { return _ToConnect; }
@@ -260,7 +258,7 @@ namespace ModbusConnection
 
                                         var combinedregisterValueHigh = registerValueHighbit + registerValueLowbit;
                                         var combinedregisterAddr = registerAddrHighbit + registerAddLowbit;
-                                       // var registerValue = Convert.ToInt32(combinedregisterValueHigh, 2);
+                                        // var registerValue = Convert.ToInt32(combinedregisterValueHigh, 2);
                                         var registerAddrregister = Convert.ToInt32(combinedregisterAddr, 2);
                                         Response = string.Format("Func:{0};RegisterAddr:{1};RegisterValue:{2}", functionCode.ToString(), registerAddrregister, combinedregisterValueHigh);
                                         Console.WriteLine(Response);
