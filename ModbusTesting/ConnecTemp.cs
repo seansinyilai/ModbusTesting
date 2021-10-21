@@ -45,7 +45,7 @@ namespace ModbusTesting
 
         public override bool ReceivedMsg(string msg)
         {            
-            if (ResponseResult.Length > 255)
+            if (ResponseResult.Length > 32767)
             {
                 ResponseResult = string.Empty;
             }
