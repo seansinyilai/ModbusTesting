@@ -7,6 +7,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <local:MainTest x:Key="maintest" />
+            <local:TextConverters x:Key="textConverter" />
             <ResourceDictionary.MergedDictionaries>
                 <local:SharedResourceDictionary Source="pack://application:,,,/ModbusTesting;component/Brushes_Classic.xaml" />
             </ResourceDictionary.MergedDictionaries>

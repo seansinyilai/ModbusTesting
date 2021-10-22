@@ -9,9 +9,9 @@
     Title="MainWindow"
     Width="800"
     Height="450"
+    DataContext="{StaticResource maintest}"
     WindowStartupLocation="CenterScreen"
     WindowState="Maximized"
-    DataContext="{StaticResource maintest}"
     mc:Ignorable="d">
     <Grid>
         <Grid.ColumnDefinitions>
@@ -25,13 +25,13 @@
             <RowDefinition />
             <RowDefinition />
         </Grid.RowDefinitions>
-        <Border >
+        <Border>
             <i:Interaction.Triggers>
-                <i:DataTrigger Binding="{Binding ConnectionEstablishment.ConnectionStatus,Mode=OneWay}" Value="True">
-                    <i:ChangePropertyAction PropertyName="Background" Value="{DynamicResource OKBrush}"/>
+                <i:DataTrigger Binding="{Binding ConnectionEstablishment.TestConnectionStatus, Mode=OneWay}" Value="True">
+                    <i:ChangePropertyAction PropertyName="Background" Value="{DynamicResource OKBrush}" />
                 </i:DataTrigger>
-                <i:DataTrigger Binding="{Binding ConnectionEstablishment.ConnectionStatus,Mode=OneWay}" Value="False">
-                    <i:ChangePropertyAction PropertyName="Background" Value="{DynamicResource ErrorBrush}"/>
+                <i:DataTrigger Binding="{Binding ConnectionEstablishment.TestConnectionStatus, Mode=OneWay}" Value="False">
+                    <i:ChangePropertyAction PropertyName="Background" Value="{DynamicResource ErrorBrush}" />
                 </i:DataTrigger>
             </i:Interaction.Triggers>
         </Border>
@@ -105,14 +105,44 @@
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </Button>
-        <Grid Grid.Row="0" Grid.Column="3" Grid.RowSpan="2">
+        <Grid
+            Grid.Row="0"
+            Grid.RowSpan="2"
+            Grid.Column="3">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition></RowDefinition>
+                <RowDefinition />
             </Grid.RowDefinitions>
-            <TextBox IsReadOnly="True" Text="{Binding ConnectionEstablishment.ResponseResult , Mode=OneWay}"/>
+            <TextBox
+                x:Name="logText"
+                IsReadOnly="True"
+               
+                TextWrapping="Wrap"
+                VerticalScrollBarVisibility="Visible" >
+                <TextBox.Text>
+                    <MultiBinding Converter="{StaticResource textConverter}">
+                        <Binding Path="ConnectionEstablishment.ResponseResult" />
+                        <Binding Path="ConnectionEstablishment2.ResponseResult" />
+                    </MultiBinding>
+                </TextBox.Text>
+                <i:Interaction.Triggers>
+                    <i:DataTrigger
+                            Binding="{Binding Text.Length, ElementName=logText}"
+                            Comparison="NotEqual"
+                            Value="0">
+                        <i:ChangePropertyAction
+                                PropertyName="CaretIndex"
+                                TargetName="logText"
+                                Value="{Binding ElementName=logText, Path=Text.Length}" />
+                        <i:CallMethodAction MethodName="ScrollToEnd" />
+                    </i:DataTrigger>
+                </i:Interaction.Triggers>
+               
+            </TextBox>
         </Grid>
     </Grid>
 </Window>
+
+<!--Text="{Binding ConnectionEstablishment.ResponseResult, Mode=OneWay}"-->

@@ -58,9 +58,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters.cs" />
     <Compile Include="ObservableObject.cs" />
     <Compile Include="RelayCommand.cs" />
     <Compile Include="SharedResourceDictionary.cs" />
+    <Compile Include="TemperatureControl.cs" />
+    <Compile Include="TestTest.cs" />
+    <Compile Include="TestTest2.cs" />
     <Page Include="Brushes_Classic.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -73,7 +77,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ConnecTemp.cs" />
+    <Compile Include="IOControl.cs" />
     <Compile Include="MainTest.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
