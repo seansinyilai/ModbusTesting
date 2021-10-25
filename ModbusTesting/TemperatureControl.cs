@@ -3,15 +3,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ModbusTesting
 {
     public abstract class TemperatureControl : ModbusMaster
     {
+        AutoResetEvent mResetEvent = new AutoResetEvent(false);
         public event Action<bool> ConnectStatusChanged;
         private string _response;
-          private int idx = 0;
+        private int idx = 0;
 
         public string ResponseResult
         {
@@ -34,7 +36,7 @@ namespace ModbusTesting
             }
         }
 
-        public TemperatureControl(string hostIP, int port) : base(hostIP, port,"TempControl")
+        public TemperatureControl(string hostIP, int port) : base(hostIP, port, "TempControl")
         {
             ResponseResult = string.Empty;
             ConnectionStatusChanged += (connnectionStatus) =>
@@ -43,24 +45,57 @@ namespace ModbusTesting
                 ConnectStatusChanged?.Invoke(connnectionStatus);
             };
         }
-        public virtual async Task<bool> AllLightOffAsync(byte SlaveID)
+        public virtual async Task<bool> SetPZ900BufferPointsAsync(byte SlaveID, List<TempRecipeStruct> listOfStruck)
         {
-           var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 2 }, new byte[] { 0, 0 });
+            ushort shiftingIdx = 0;
+            bool result = false;
+            ushort mPoints = 0;
+            byte[] value1 = new byte[2];
+            byte[] value2 = new byte[2];
+            if (listOfStruck.GetType() != typeof(List<TempRecipeStruct>))
+            {
+                return false;
+            }
+            listOfStruck.ForEach(async tmpStruct =>
+             {
+                 mPoints = Convert.ToUInt16(12288 + shiftingIdx);
+                 shiftingIdx += 3;
+                 value1 = tmpStruct.Temperature.SplitShortToHighAndLowByte();
+                 value2 = tmpStruct.TempTime.SplitShortToHighAndLowByte();
+                 result = await SendWriteMultipleRegistersMsgFormat(SlaveID, mPoints, new byte[] { 0, 2 }, value1, value2);
+                
+             });
+            var result2 = await SetPZ900ModeEnd(2, Convert.ToByte(listOfStruck.Count()));
+            return result && result2;
+        }
+        public virtual async Task<bool> ReadPZ900BufferPointsAsync(byte SlaveID)
+        {
+            var result = await ReadHoldingRegister_SendMsgFormat(SlaveID, 12288, 30);
+            return result ;
+        }
+        public virtual async Task<bool> ReadPZ900ModeEnd(byte SlaveID)
+        {
+            var result = await ReadHoldingRegister_SendMsgFormat(SlaveID, 20480, 1);
             return result;
         }
-        public virtual async Task<bool> ReadDIsAsync(byte SlaveID)
+        public virtual async Task<bool> SetPZ900ModeEnd(byte SlaveID, byte data)
         {
-          var result = await  ReadCoilsCommand_SendMsgFormat(SlaveID, 0, 8);
-            return result;
-        }
-        public virtual async Task<bool> AllLightOnAsync(byte SlaveID)
-        {
-            var result = await  SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 2 }, new byte[] { 255, 0 });
+            if (data.GetType() != typeof(byte))
+            {
+                return false;
+            }
+            byte[] tmp = new byte[2];
+            string binartsaa = Convert.ToString(data, 2).PadLeft(8, '0');
+            string highbit = binartsaa.Substring(0, 4);
+            string lowbit = binartsaa.Substring(4, 4);
+            tmp[0] = Convert.ToByte(Convert.ToInt32(highbit, 2));
+            tmp[1] = Convert.ToByte(Convert.ToInt32(lowbit, 2));
+            var result = await SendWriteSingleRegisterMsgFormat(SlaveID, 20480, tmp);
             return result;
         }
         public virtual async Task<bool> ReadPZ900PointsAsync(byte SlaveID)
         {
-           var result = await  ReadHoldingRegister_SendMsgFormat(SlaveID, 0, 20);
+            var result = await ReadHoldingRegister_SendMsgFormat(SlaveID, 0, 20);
             return result;
         }
         public override bool ReceivedMsg(string msg)
@@ -99,7 +134,7 @@ namespace ModbusTesting
                 }
                 idx++;
                 ResponseResult += "No: temp " + idx + msg + "\n";
-               // ResponseResult += "TemperatureControl;" + msg + "\n";
+                // ResponseResult += "TemperatureControl;" + msg + "\n";
                 ReceivedCallBackMsg(ResponseResult);
             }
             return true;

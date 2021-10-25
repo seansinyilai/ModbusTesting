@@ -30,7 +30,7 @@ namespace ModbusConnection
         List<string> valueList;
         List<string> bitsList;
         List<string> discreteBitList;
-        int idx = 0;
+       // int idx = 0;
         public bool ToConnect
         {
             get { return _ToConnect; }
@@ -107,7 +107,6 @@ namespace ModbusConnection
                 try
                 {
                     string logstr = string.Format("{0} : {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), "Heart Beat Starts");
-                    //Log.Logger.Debug(logstr);
                     WriteLog(logstr, "Debug");
                     ushort temp = 1;
                     var gotByteData = temp.SplitShortToHighAndLowByte();
@@ -122,7 +121,7 @@ namespace ModbusConnection
                         dataLength = ((ushort)gotByteData.Length).SplitShortToHighAndLowByte().Length,
                     });
                     string logstrEnd = string.Format("{0} : {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), "Heart Beat Ends");
-                    // Log.Logger.Debug(logstrEnd);
+                  
                     WriteLog(logstrEnd, "Debug");
                 }
                 catch (Exception ex)
@@ -130,16 +129,12 @@ namespace ModbusConnection
                     string logstr = string.Format("{0} : {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), ex.Message.ToString());
 
                     WriteLog(logstr, "Error");
-                    //Log.Logger.Error(logstr);
-                    //Log.Logger.Information(logstr);
-                    //Log.Logger.Debug(logstr);
                     MasterClient.Client.Close();
                     TcpToConnect(HostIP, Port);
                 }
                 autoReset.WaitOne();
                 string logstrFinished = string.Format("{0} : Heart Beat {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), "FinishedAutoReset");
                 WriteLog(logstrFinished, "Debug");
-                //  Log.Logger.Debug(logstrFinished);
             });
         }
 

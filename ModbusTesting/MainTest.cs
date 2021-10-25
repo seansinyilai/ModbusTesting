@@ -87,34 +87,42 @@ namespace ModbusTesting
         private async Task ReadDiscreteInputs()
         {
             //ConnectionEstablishment.ReadDiscreteInputs_SendMsgFormat(1, 197, 22);
-            int idx = 0;
-            await Task.Run(async () =>
-            {
-                while (true)
-                {
-                    var a = await ConnectionEstablishment2.ReadPZ900PointsAsync(1);
-                    if (a)
-                    {
-                        Console.WriteLine("輸入===> temp " + idx);
-                        idx++;
-                        var b = await ConnectionEstablishment2.AllLightOnAsync(1);
-                        if (b)
-                        {
-                            Console.WriteLine("輸入===> temp " + idx);
-                            idx++;
-                            var c = await ConnectionEstablishment2.ReadDIsAsync(1);
-                            if (c)
-                            {
-                                var d = await ConnectionEstablishment2.AllLightOffAsync(1);
-                            }
-                        }
-                       
-                    }
+            //int idx = 0;
+            var a = await ConnectionEstablishment2.ReadPZ900ModeEnd(2);
+            List<TempRecipeStruct> lsTmep = new List<TempRecipeStruct>();
+            lsTmep.Add(new TempRecipeStruct() {Temperature = 70,TempTime=7 });
+            lsTmep.Add(new TempRecipeStruct() {Temperature = 333,TempTime=3});
+            var b = await ConnectionEstablishment2.SetPZ900BufferPointsAsync(2, lsTmep);
+            var cb = await ConnectionEstablishment2.ReadPZ900BufferPointsAsync(2);
+            //var b = await ConnectionEstablishment2.SetPZ900ModeEnd(2,6);
+            var c = await ConnectionEstablishment2.ReadPZ900ModeEnd(2);
+            //await Task.Run(async () =>
+            //{
+            //    while (true)
+            //    {
+            //        var a = await ConnectionEstablishment2.ReadPZ900PointsAsync(1);
+            //        if (a)
+            //        {
+            //            Console.WriteLine("輸入===> temp " + idx);
+            //            idx++;
+            //            var b = await ConnectionEstablishment2.AllLightOnAsync(1);
+            //            if (b)
+            //            {
+            //                Console.WriteLine("輸入===> temp " + idx);
+            //                idx++;
+            //                var c = await ConnectionEstablishment2.ReadDIsAsync(1);
+            //                if (c)
+            //                {
+            //                    var d = await ConnectionEstablishment2.AllLightOffAsync(1);
+            //                }
+            //            }
 
-                    Console.WriteLine("輸入===> temp " + idx);
-                    idx++;
-                }
-            });
+            //        }
+
+            //        Console.WriteLine("輸入===> temp " + idx);
+            //        idx++;
+            //    }
+            // });
             //new Thread(() =>
             //{
             //    int idx = 0;
@@ -126,9 +134,6 @@ namespace ModbusTesting
             //        //ConnectionEstablishment2.ReadDIs(1);
             //        //ConnectionEstablishment2.AllLightOn(1);
             //        //idx++;
-
-
-
             //    }
 
             //}).Start();
