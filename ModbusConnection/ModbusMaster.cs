@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -12,7 +13,7 @@ namespace ModbusConnection
 {
     public class ModbusMaster : ObservableObject
     {
-
+        public string FilesParameters = string.Empty;
         AutoResetEvent autoReset = new AutoResetEvent(false);
         TaskFactory taskFactory = new TaskFactory(new StaTaskScheduler(1));
         public event Action<bool> ConnectionStatusChanged;
@@ -24,10 +25,12 @@ namespace ModbusConnection
         bool closed = false;
         bool _ToConnect;
         bool toSendFlag = false;
+        string FileName = string.Empty;
         ushort autoIncrement = 0;
         List<string> valueList;
         List<string> bitsList;
         List<string> discreteBitList;
+        int idx = 0;
         public bool ToConnect
         {
             get { return _ToConnect; }
@@ -71,44 +74,73 @@ namespace ModbusConnection
             }
         }
 
-        public ModbusMaster(string hostIP, int port)
+        public ModbusMaster(string hostIP, int port, string deviceID)
         {
             HostIP = hostIP;
             Port = port;
+            FileName = @"\" + deviceID + "Modbus.txt";
+            FilesParameters = string.Format(@"C:\GPModbus{0}\", deviceID);
             SendQueue = new BlockQueue<SendStruct>();
             DealQueue = new BlockQueue<string>();
+
             Task.Factory.StartNew(SendMessage, TaskCreationOptions.LongRunning);
             Task.Factory.StartNew(ReadMessage, TaskCreationOptions.LongRunning);
             Task.Factory.StartNew(DealMessage, TaskCreationOptions.LongRunning);
+
             tikTok = new DispatcherTimer();
             tikTok.Tick += new EventHandler(timeCycle);
             tikTok.Interval = new TimeSpan(0, 0, 0, 10);
             tikTok.Start();
-
+            IO_WriteReadFiles myLog = new IO_WriteReadFiles();
         }
-
+        private void WriteLog(string content, string path)
+        {
+            WriteIOClassQueue mQueue = new WriteIOClassQueue();
+            mQueue.Path = string.Format("{0}{1}{2}", FilesParameters, path, FileName);
+            mQueue.Content = content;
+            IO_WriteReadFiles.writeQueue.EnQueue(mQueue);
+        }
         private void timeCycle(object sender, EventArgs e)
         {
-            try
+            taskFactory.StartNew(() =>
             {
-                ushort temp = 1;
-                var gotByteData = temp.SplitShortToHighAndLowByte();
-                SendQueue.EnQueue(new SendStruct()
+                try
                 {
-                    TransactionID = 15,
-                    ProtocolID = 0,
-                    Address = 1,
-                    FunctionCode = (byte)FunctionCode.ReadInputRegisters,
-                    StartAddress = 0,
-                    data = gotByteData,  /// 直接抓取實際數量
-                    dataLength = ((ushort)gotByteData.Length).SplitShortToHighAndLowByte().Length,
-                });
-            }
-            catch (Exception)
-            {
-                MasterClient.Client.Close();
-                TcpToConnect(HostIP, Port);
-            }
+                    string logstr = string.Format("{0} : {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), "Heart Beat Starts");
+                    //Log.Logger.Debug(logstr);
+                    WriteLog(logstr, "Debug");
+                    ushort temp = 1;
+                    var gotByteData = temp.SplitShortToHighAndLowByte();
+                    SendQueue.EnQueue(new SendStruct()
+                    {
+                        TransactionID = 15,
+                        ProtocolID = 0,
+                        Address = 1,
+                        FunctionCode = (byte)FunctionCode.ReadInputRegisters,
+                        StartAddress = 0,
+                        data = gotByteData,  /// 直接抓取實際數量
+                        dataLength = ((ushort)gotByteData.Length).SplitShortToHighAndLowByte().Length,
+                    });
+                    string logstrEnd = string.Format("{0} : {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), "Heart Beat Ends");
+                    // Log.Logger.Debug(logstrEnd);
+                    WriteLog(logstrEnd, "Debug");
+                }
+                catch (Exception ex)
+                {
+                    string logstr = string.Format("{0} : {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), ex.Message.ToString());
+
+                    WriteLog(logstr, "Error");
+                    //Log.Logger.Error(logstr);
+                    //Log.Logger.Information(logstr);
+                    //Log.Logger.Debug(logstr);
+                    MasterClient.Client.Close();
+                    TcpToConnect(HostIP, Port);
+                }
+                autoReset.WaitOne();
+                string logstrFinished = string.Format("{0} : Heart Beat {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), "FinishedAutoReset");
+                WriteLog(logstrFinished, "Debug");
+                //  Log.Logger.Debug(logstrFinished);
+            });
         }
 
         private void TcpToConnect(string hostIP, int port)
@@ -123,7 +155,7 @@ namespace ModbusConnection
         {
             while (true)
             {
-                // SpinWait.SpinUntil(() => false, 100);
+                SpinWait.SpinUntil(() => false, 2);
                 if (!toSendFlag)
                 {
                     try
@@ -132,10 +164,9 @@ namespace ModbusConnection
                         SendStruct GotMessage = SendQueue.DeQueue();
                         if (GotMessage != null) SENDRequest(GotMessage);
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
-
-                        throw;
+                        WriteLog(e.Message.ToString(),"Error");
                     }
 
                 }
@@ -145,15 +176,23 @@ namespace ModbusConnection
         {
             while (true)
             {
-                //     SpinWait.SpinUntil(() => false, 100);
-                string GotMessage = DealQueue.DeQueue();
-                if (GotMessage != null) ReceivedMsg(GotMessage);
+                SpinWait.SpinUntil(() => false, 2);
+                try
+                {
+                    string GotMessage = DealQueue.DeQueue();
+                    if (GotMessage != null) ReceivedMsg(GotMessage);
+                }
+                catch (Exception e)
+                {
+                    WriteLog(e.Message.ToString(), "Error");
+                }
             }
         }
         private void ReadMessage()
         {
             while (true)
             {
+                SpinWait.SpinUntil(() => false, 2);
                 if (!ToConnect && !closed)
                 {
                     closed = true;
@@ -163,6 +202,8 @@ namespace ModbusConnection
                 {
                     if (MasterClient.Available > 0)
                     {
+                        string logstr = string.Format("MsgReceivedStarts at [{0}]", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"));
+                        WriteLog(logstr, "Debug");
                         DateTime RecvTime = DateTime.Now;
                         _streamFromServer = MasterClient.GetStream();
                         byte[] buff = new byte[MasterClient.ReceiveBufferSize];
@@ -178,6 +219,8 @@ namespace ModbusConnection
                         Array.Copy(datashow, myObjArray, datashow.Length);
                         string stringdata = BitConverter.ToString(datashow);//把數組轉換成16
                         var ErrorResult = CheckingErrorCode(myObjArray[7], myObjArray[8]);
+                        logstr = string.Format("{0} ReceivedMsg [{1}] ErrorResult [{0}]", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), stringdata, ErrorResult);
+                        WriteLog(logstr, "Debug");
                         if (string.IsNullOrEmpty(ErrorResult) || string.IsNullOrWhiteSpace(ErrorResult))
                         {
                             //00-01-00-00-00-06-01-01-03-CD-6B-05
@@ -357,21 +400,34 @@ namespace ModbusConnection
                                     break;
                             }
                             toSendFlag = false;
-                            if (!string.IsNullOrEmpty(Response) || !string.IsNullOrWhiteSpace(Response))
-                            {
-                                DealQueue.EnQueue(Response);
-                                autoReset.Set();
-                            }
+                            DealQueue.EnQueue(Response);
+                            autoReset.Set();
+                            string logstrEnd = string.Format("[{0}] ReceivedEnd: [{1}] autoResetFlag: [{2}]",
+                                                               DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
+                                                               Response,
+                                                               toSendFlag.ToString());
+                            WriteLog(logstrEnd, "Debug");
+                            //if (!string.IsNullOrEmpty(Response) || !string.IsNullOrWhiteSpace(Response))
+                            //{
+                            //    DealQueue.EnQueue(Response);
+                            //    autoReset.Set();
+                            //}
                         }
                         else
                         {//ReadCoilsError;IllegalDataValue
 
                             DealQueue.EnQueue(ErrorResult);
+                            autoReset.Set();
                             toSendFlag = false;
-                            if (!string.IsNullOrEmpty(Response) || !string.IsNullOrWhiteSpace(Response))
-                            {
-                                autoReset.Set();
-                            }
+                            string logstrEnd = string.Format("{0} ReceivedEnd: {1} autoResetFlag: {2}",
+                                                             DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
+                                                             ErrorResult,
+                                                             toSendFlag.ToString());
+                            WriteLog(logstrEnd, "Error");
+                            //if (!string.IsNullOrEmpty(Response) || !string.IsNullOrWhiteSpace(Response))
+                            //{
+                            //    autoReset.Set();
+                            //}
                         }
                     }
                 }
@@ -386,32 +442,37 @@ namespace ModbusConnection
         public async Task<bool> SendWriteSingleCoilMsgFormat(byte SlaveID, ushort StartAddress, byte[] data)
         {
             await taskFactory.StartNew(() =>
-            {
-
-                autoIncrement++;
-                SendQueue.EnQueue(new SendStruct()
-                {
-                    TransactionID = autoIncrement,
-                    ProtocolID = 0,
-                    Address = SlaveID,
-                    FunctionCode = (byte)FunctionCode.WriteSingleCoil,
-                    StartAddress = StartAddress,
-                    data = data,                                  ///陣列長度
-                    dataLength = data.Length,
-                });
-                autoReset.WaitOne();
-            });
+             {
+                 string result = string.Empty;
+                 int mLength = data.Length;
+                 if (mLength != 2)
+                 {
+                     result = string.Format("Info: {0} Length:{1}", "Length of data is invalid !!", mLength.ToString());
+                 }
+                 string logstr = string.Format("SendWriteSingleCoilStarts:{0} SlaveID={1} StartAddress={2} Result={3}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), SlaveID.ToString(), StartAddress.ToString(), result);
+                 WriteLog(logstr, "Debug");
+                 autoIncrement++;
+                 SendQueue.EnQueue(new SendStruct()
+                 {
+                     TransactionID = autoIncrement,
+                     ProtocolID = 0,
+                     Address = SlaveID,
+                     FunctionCode = (byte)FunctionCode.WriteSingleCoil,
+                     StartAddress = StartAddress,
+                     data = data,                                  ///陣列長度
+                     dataLength = data.Length,
+                 });
+                 autoReset.WaitOne();
+                 string logstrEnd = string.Format("SendWriteSingleCoilEnds:{0} " +
+                                                            "SlaveID={1} StartAddress={2} " +
+                                                            "result={3} autoIncrement={4}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
+                                                            SlaveID.ToString(),
+                                                            StartAddress.ToString(),
+                                                            result,
+                                                            autoIncrement.ToString());
+                 WriteLog(logstrEnd, "Debug");
+             });
             return true;
-            //string result;
-            //int mLength = data.Length;
-            //if (mLength != 2)
-            //{
-            //    result = "Length of data is invalid !!";
-            //    return string.Format("Info: {0} Length:{1}", result, mLength.ToString());
-            //}
-
-            //result = "OK";
-            //return result;
         }
         /// <param name="transactionID">autoIncrement</param>
         /// <param name="protocolID">0 modbus</param>
@@ -422,31 +483,38 @@ namespace ModbusConnection
         public async Task<bool> SendWriteSingleRegisterMsgFormat(byte SlaveID, ushort StartAddress, byte[] data)
         {
             await taskFactory.StartNew(() =>
-            {
-                autoIncrement++;
-                SendQueue.EnQueue(new SendStruct()
-                {
-                    TransactionID = autoIncrement,
-                    ProtocolID = 0,
-                    Address = SlaveID,
-                    FunctionCode = (byte)FunctionCode.WriteSingleRegister,
-                    StartAddress = StartAddress,
-                    data = data,                                  ///陣列長度
-                    dataLength = data.Length,
-                });
-                autoReset.WaitOne();
-            });
-            return true;
-            //    string result;
-            //int mLength = data.Length;
-            //if (mLength != 2)
-            //{
-            //    result = "Length of data is invalid !!";
-            //    return string.Format("Info: {0} Length:{1}", result, mLength.ToString());
-            //}
+           {
+               string result = string.Empty;
+               int mLength = data.Length;
+               if (mLength != 2)
+               {
+                   result = string.Format("Info: {0} Length:{1}", "Length of data is invalid !!", mLength.ToString());
+               }
+               string logstr = string.Format("SendWriteSingleRegisterStarts:{0} SlaveID={1} StartAddress={2} Result={3}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), SlaveID.ToString(), StartAddress.ToString(), result);
+               WriteLog(logstr, "Debug");
 
-            //result = "OK";
-            //return result;
+               autoIncrement++;
+               SendQueue.EnQueue(new SendStruct()
+               {
+                   TransactionID = autoIncrement,
+                   ProtocolID = 0,
+                   Address = SlaveID,
+                   FunctionCode = (byte)FunctionCode.WriteSingleRegister,
+                   StartAddress = StartAddress,
+                   data = data,                                  ///陣列長度
+                   dataLength = data.Length,
+               });
+               autoReset.WaitOne();
+               string logstrEnd = string.Format("SendWriteSingleRegisterEnds:{0} " +
+                                                          "SlaveID={1} StartAddress={2} " +
+                                                          "result={3} autoIncrement={4}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
+                                                          SlaveID.ToString(),
+                                                          StartAddress.ToString(),
+                                                          result,
+                                                          autoIncrement.ToString());
+               WriteLog(logstrEnd, "Debug");
+           });
+            return true;
         }
         /// <param name="transactionID">autoIncrement</param>
         /// <param name="protocolID">0 modbus</param>
@@ -458,12 +526,11 @@ namespace ModbusConnection
         {
             await taskFactory.StartNew(() =>
             {
-                string result;
+                string result = string.Empty;
                 int mLength = outPutQuantityHighLowBit.Length;
                 if (mLength != 2)
                 {
                     result = "Length of data is invalid !!";
-                    // return string.Format("Info: {0} Length:{1}", result, mLength.ToString());
                 }
                 for (int y = 0; y < multiOutputData.Count(); y++)
                 {
@@ -471,9 +538,11 @@ namespace ModbusConnection
                     if (multiOutputData[y].Length != 2)
                     {
                         result = "Length of data is invalid !!";
-                        //   return string.Format("Info: {0} Length:{1}", result, mmLength.ToString());
                     }
                 }
+
+                string logstr = string.Format("SendWriteMultipleCoilsStarts:{0} SlaveID={1} StartAddress={2} Result={3}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), SlaveID.ToString(), StartAddress.ToString(), result);
+                WriteLog(logstr, "Debug");
                 autoIncrement++;
                 var highbit = Convert.ToString(outPutQuantityHighLowBit[0], 2).PadLeft(8, '0');
                 var lowbit = Convert.ToString(outPutQuantityHighLowBit[1], 2).PadLeft(8, '0');
@@ -517,7 +586,14 @@ namespace ModbusConnection
                     dataLength = data.Length,
                 });
                 autoReset.WaitOne();
-
+                string logstrEnd = string.Format("SendWriteMultipleCoilsEnds:{0} " +
+                                           "SlaveID={1} StartAddress={2} " +
+                                           "result={3} autoIncrement={4}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
+                                           SlaveID.ToString(),
+                                           StartAddress.ToString(),
+                                           result,
+                                           autoIncrement.ToString());
+                Log.Logger.Debug(logstrEnd);
             });
             return true;
             //result = "OK";
@@ -534,12 +610,11 @@ namespace ModbusConnection
         {
             await taskFactory.StartNew(() =>
             {
-                string result;
+                string result = string.Empty;
                 int mLength = quantityHighLowBit.Length;
                 if (mLength != 2)
                 {
                     result = "Length of data is invalid !!";
-                    //  return string.Format("Info: {0} Length:{1}", result, mLength.ToString());
                 }
                 for (int y = 0; y < multipleData.Count(); y++)
                 {
@@ -547,9 +622,10 @@ namespace ModbusConnection
                     if (multipleData[y].Length != 2)
                     {
                         result = "Length of data is invalid !!";
-                        //    return string.Format("Info: {0} Length:{1}", result, mmLength.ToString());
                     }
                 }
+                string logstr = string.Format("SendWriteMultipleRegistersStarts:{0} SlaveID={1} StartAddress={2} Result={3}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), SlaveID.ToString(), StartAddress.ToString(), result);
+                WriteLog(logstr, "Debug");
                 autoIncrement++;
                 var highbit = Convert.ToString(quantityHighLowBit[0], 2).PadLeft(8, '0');
                 var lowbit = Convert.ToString(quantityHighLowBit[1], 2).PadLeft(8, '0');
@@ -583,6 +659,14 @@ namespace ModbusConnection
                     dataLength = data.Length,
                 });
                 autoReset.WaitOne();
+                string logstrEnd = string.Format("SendWriteMultipleRegistersEnds:{0} " +
+                                           "SlaveID={1} StartAddress={2} " +
+                                           "result={3} autoIncrement={4}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
+                                           SlaveID.ToString(),
+                                           StartAddress.ToString(),
+                                           result,
+                                           autoIncrement.ToString());
+                WriteLog(logstrEnd, "Debug");
             });
             return true;
             //result = "OK";
@@ -599,6 +683,8 @@ namespace ModbusConnection
         {
             await taskFactory.StartNew(() =>
             {
+                string logstr = string.Format("ReadCoilsCommandStarts:{0} SlaveID={1} StartAddress={2} numberOfDataToRead={3}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), SlaveID.ToString(), StartAddress.ToString(), numberOfDataToRead.ToString());
+                WriteLog(logstr, "Debug");
                 autoIncrement++;
                 var gotByteData = numberOfDataToRead.SplitShortToHighAndLowByte();
                 SendQueue.EnQueue(new SendStruct()
@@ -612,6 +698,14 @@ namespace ModbusConnection
                     dataLength = ((ushort)gotByteData.Length).SplitShortToHighAndLowByte().Length,
                 });
                 autoReset.WaitOne();
+                string logstrEnd = string.Format("ReadCoilsCommandEnds:{0} " +
+                                             "SlaveID={1} StartAddress={2} " +
+                                             "numberOfDataToRead={3} autoIncrement={4}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
+                                             SlaveID.ToString(),
+                                             StartAddress.ToString(),
+                                             numberOfDataToRead.ToString(),
+                                             autoIncrement.ToString());
+                WriteLog(logstrEnd, "Debug");
             });
             return true;
             //  return "OK";
@@ -626,6 +720,8 @@ namespace ModbusConnection
         {
             await taskFactory.StartNew(() =>
             {
+                string logstr = string.Format("ReadDiscreteInputsStarts:{0} SlaveID={1} StartAddress={2} numberOfDataToRead={3}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), SlaveID.ToString(), StartAddress.ToString(), numberOfDataToRead.ToString());
+                WriteLog(logstr, "Debug");
                 autoIncrement++;
                 var gotByteData = numberOfDataToRead.SplitShortToHighAndLowByte();
                 SendQueue.EnQueue(new SendStruct()
@@ -639,6 +735,14 @@ namespace ModbusConnection
                     dataLength = ((ushort)gotByteData.Length).SplitShortToHighAndLowByte().Length,
                 });
                 autoReset.WaitOne();
+                string logstrEnd = string.Format("ReadDiscreteInputsEnds:{0} " +
+                                                "SlaveID={1} StartAddress={2} " +
+                                                "numberOfDataToRead={3} autoIncrement={4}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
+                                                SlaveID.ToString(),
+                                                StartAddress.ToString(),
+                                                numberOfDataToRead.ToString(),
+                                                autoIncrement.ToString());
+                WriteLog(logstrEnd, "Debug");
             });
             return true;
         }
@@ -652,6 +756,8 @@ namespace ModbusConnection
         {
             await taskFactory.StartNew(() =>
             {
+                string logstr = string.Format("ReadHoldingRegisterStarts:{0} SlaveID={1} StartAddress={2} numberOfDataToRead={3}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), SlaveID.ToString(), StartAddress.ToString(), numberOfDataToRead.ToString());
+                WriteLog(logstr, "Debug");
                 autoIncrement++;
                 var gotByteData = numberOfDataToRead.SplitShortToHighAndLowByte();
                 SendQueue.EnQueue(new SendStruct()
@@ -665,6 +771,14 @@ namespace ModbusConnection
                     dataLength = ((ushort)gotByteData.Length).SplitShortToHighAndLowByte().Length,
                 });
                 autoReset.WaitOne();
+                string logstrEnd = string.Format("ReadHoldingRegisterEnds:{0} " +
+                                                "SlaveID={1} StartAddress={2} " +
+                                                "numberOfDataToRead={3} autoIncrement={4}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
+                                                SlaveID.ToString(),
+                                                StartAddress.ToString(),
+                                                numberOfDataToRead.ToString(),
+                                                autoIncrement.ToString());
+                WriteLog(logstrEnd, "Debug");
             });
             return true;
         }
@@ -703,11 +817,19 @@ namespace ModbusConnection
                     tmpByteArray.Add(x[j]);
                 }
             });
+            try
+            {
+                _streamFromServer = MasterClient.GetStream();
+                byte[] dataOutStream = tmpByteArray.ToArray();
+                _streamFromServer.WriteAsync(dataOutStream, 0, dataOutStream.Length);
+                _streamFromServer.Flush();
+            }
+            catch (Exception e)
+            {
+                string logstr = string.Format("ConnectionStatus: {0} : {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), e.Message.ToString());
+                WriteLog(logstr,"Error");
+            }
 
-            _streamFromServer = MasterClient.GetStream();
-            byte[] dataOutStream = tmpByteArray.ToArray();
-            _streamFromServer.WriteAsync(dataOutStream, 0, dataOutStream.Length);
-            _streamFromServer.Flush();
         }
         private List<Tuple<string, byte[]>> Header_PDU_Data(CommandStruct obj)
         {
@@ -723,19 +845,35 @@ namespace ModbusConnection
         }
         private void ConnectCallBack(IAsyncResult ar)
         {
-            ToConnect = ar.AsyncWaitHandle.WaitOne(100, true);
-            if (MasterClient.Connected && ToConnect)
+            try
             {
-                ToConnect = true;
-                ConnectionStatusChanged?.Invoke(ToConnect);
+                ToConnect = ar.AsyncWaitHandle.WaitOne(100, true);
+                if (MasterClient.Connected && ToConnect)
+                {
+                    ToConnect = true;
+                    string logstr = string.Format("{0} : {1} ConnectionStatus: {2}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), "Connected", ToConnect.ToString());
+
+                    WriteLog(logstr, "Debug");
+                    ConnectionStatusChanged?.Invoke(ToConnect);
+                }
+                else
+                {
+                    ToConnect = false;
+                    string logstr = string.Format("{0} : {1} ConnectionStatus: {2}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), "Disconnected", ToConnect.ToString());
+                    //Log.Logger.Debug(logstr);
+                    WriteLog(logstr, "Debug");
+                    _streamFromServer?.Close();
+                    closed = false;
+                    ConnectionStatusChanged?.Invoke(ToConnect);
+                }
             }
-            else
+            catch (Exception e)
             {
-                _streamFromServer?.Close();
-                closed = false;
-                ToConnect = false;
-                ConnectionStatusChanged?.Invoke(ToConnect);
+                string logstr = string.Format("ConnectionStatus: {0} : {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), e.Message.ToString());
+                //Log.Logger.Debug(logstr);
+                WriteLog(logstr, "Error");
             }
+
         }
         private string CheckingErrorCode(byte er, byte ex)
         {

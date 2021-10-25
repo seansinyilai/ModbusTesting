@@ -36,7 +36,7 @@ namespace ModbusTesting
             }
         }
 
-        public IOControl(string hostIP, int port) : base(hostIP, port)
+        public IOControl(string hostIP, int port) : base(hostIP, port,"IOControl")
         {
             ResponseResult = string.Empty;
             ConnectionStatusChanged += (connnectionStatus) =>
@@ -99,6 +99,11 @@ namespace ModbusTesting
         public virtual async Task<bool> AllLightOffAsync(byte SlaveID)
         {
             var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 19, new byte[] { 0, 2 }, new byte[] { 0, 0 });
+            return result;
+        }
+        public virtual async Task<bool> ReadAllLightsAsync(byte SlaveID)
+        {
+            var result = await ReadCoilsCommand_SendMsgFormat(SlaveID, 16, 8);
             return result;
         }
         public override bool ReceivedMsg(string msg)

@@ -1,4 +1,5 @@
 ﻿using ModbusConnection;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +25,7 @@ namespace ModbusTesting
         private bool flag = false;
         public MainTest()
         {
+         
             //ConnectionEstablishment = new IOControl("192.168.0.112", 502);           
             ConnectionEstablishment = new TestTest("192.168.0.112", 502);
             ConnectionEstablishment2 = new TestTest2("192.168.0.112", 502);
@@ -95,12 +97,12 @@ namespace ModbusTesting
                     {
                         Console.WriteLine("輸入===> temp " + idx);
                         idx++;
-                        var b = await ConnectionEstablishment2.ReadDIsAsync(1);
+                        var b = await ConnectionEstablishment2.AllLightOnAsync(1);
                         if (b)
                         {
                             Console.WriteLine("輸入===> temp " + idx);
                             idx++;
-                            var c = await ConnectionEstablishment2.AllLightOnAsync(1);
+                            var c = await ConnectionEstablishment2.ReadDIsAsync(1);
                             if (c)
                             {
                                 var d = await ConnectionEstablishment2.AllLightOffAsync(1);
@@ -156,13 +158,21 @@ namespace ModbusTesting
                     {
                         Console.WriteLine("輸入===> IO " + idx);
                         idx++;
-                        var b = await ConnectionEstablishment.ReadDIsAsync(1);
+                        //var b = await ConnectionEstablishment.ReadDIsAsync(1);
+                        var b = await ConnectionEstablishment.ReadAllLightsAsync(1);
                         if (b)
                         {
                             Console.WriteLine("輸入===> IO " + idx);
                             idx++;
                             var c = await ConnectionEstablishment.AllLightOnAsync(1);
+                            if (c)
+                            {
+                                var d = await ConnectionEstablishment.ReadAllLightsAsync(1);
+                                Console.WriteLine("輸入===> IO " + idx);
+                                idx++;
+                            }
                         }
+
                     }
 
                     Console.WriteLine("輸入===> IO " + idx);

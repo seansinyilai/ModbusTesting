@@ -34,7 +34,7 @@ namespace ModbusTesting
             }
         }
 
-        public TemperatureControl(string hostIP, int port) : base(hostIP, port)
+        public TemperatureControl(string hostIP, int port) : base(hostIP, port,"TempControl")
         {
             ResponseResult = string.Empty;
             ConnectionStatusChanged += (connnectionStatus) =>
