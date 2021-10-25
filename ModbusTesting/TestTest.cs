@@ -8,7 +8,7 @@ namespace ModbusTesting
 {
     public class TestTest : IOControl
     {
-        private bool _testConnectionStatus;
+        private bool _testConnectionStatus; 
 
         public bool TestConnectionStatus
         {
