@@ -113,7 +113,8 @@ namespace ModbusTesting
                         {
                             Console.WriteLine("輸入===> temp " + idx);
                             idx++;
-                            var c = await ConnectionEstablishment2.ReadDIsAsync(1);
+                            //var c = await ConnectionEstablishment2.ReadDIsAsync(1);
+                            var c = await ConnectionEstablishment2.ReadAllLightsAsync(1);
                             if (c)
                             {
                                 var d = await ConnectionEstablishment2.AllLightOffAsync(1);

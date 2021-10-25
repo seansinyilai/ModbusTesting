@@ -30,7 +30,7 @@ namespace ModbusConnection
         List<string> valueList;
         List<string> bitsList;
         List<string> discreteBitList;
-       // int idx = 0;
+        // int idx = 0;
         public bool ToConnect
         {
             get { return _ToConnect; }
@@ -100,9 +100,9 @@ namespace ModbusConnection
             mQueue.Content = content;
             IO_WriteReadFiles.writeQueue.EnQueue(mQueue);
         }
-        private void timeCycle(object sender, EventArgs e)
+        private async void timeCycle(object sender, EventArgs e)
         {
-            taskFactory.StartNew(() =>
+            await taskFactory.StartNew(() =>
             {
                 try
                 {
@@ -121,7 +121,7 @@ namespace ModbusConnection
                         dataLength = ((ushort)gotByteData.Length).SplitShortToHighAndLowByte().Length,
                     });
                     string logstrEnd = string.Format("{0} : {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), "Heart Beat Ends");
-                  
+
                     WriteLog(logstrEnd, "Debug");
                 }
                 catch (Exception ex)
@@ -150,7 +150,6 @@ namespace ModbusConnection
         {
             while (true)
             {
-                SpinWait.SpinUntil(() => false, 2);
                 if (!toSendFlag)
                 {
                     try
@@ -161,17 +160,17 @@ namespace ModbusConnection
                     }
                     catch (Exception e)
                     {
-                        WriteLog(e.Message.ToString(),"Error");
+                        WriteLog(e.Message.ToString(), "Error");
                     }
 
                 }
+                SpinWait.SpinUntil(() => false, 2);
             }
         }
         private void DealMessage()
         {
             while (true)
             {
-                SpinWait.SpinUntil(() => false, 2);
                 try
                 {
                     string GotMessage = DealQueue.DeQueue();
@@ -181,6 +180,7 @@ namespace ModbusConnection
                 {
                     WriteLog(e.Message.ToString(), "Error");
                 }
+                SpinWait.SpinUntil(() => false, 2);
             }
         }
         private void ReadMessage()
@@ -822,7 +822,7 @@ namespace ModbusConnection
             catch (Exception e)
             {
                 string logstr = string.Format("ConnectionStatus: {0} : {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), e.Message.ToString());
-                WriteLog(logstr,"Error");
+                WriteLog(logstr, "Error");
             }
 
         }

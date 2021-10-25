@@ -109,6 +109,11 @@ namespace ModbusTesting
             var result = await ReadCoilsCommand_SendMsgFormat(SlaveID, 0, 8);
             return result;
         }
+        public virtual async Task<bool> ReadAllLightsAsync(byte SlaveID)
+        {
+            var result = await ReadCoilsCommand_SendMsgFormat(SlaveID, 16, 8);
+            return result;
+        }
         public virtual async Task<bool> AllLightOnAsync(byte SlaveID)
         {
             var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 2 }, new byte[] { 255, 0 });
