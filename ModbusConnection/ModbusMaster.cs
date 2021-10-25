@@ -588,7 +588,7 @@ namespace ModbusConnection
                                            StartAddress.ToString(),
                                            result,
                                            autoIncrement.ToString());
-                Log.Logger.Debug(logstrEnd);
+                WriteLog(logstr, "Debug");
             });
             return true;
             //result = "OK";

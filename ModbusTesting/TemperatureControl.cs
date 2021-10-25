@@ -98,6 +98,24 @@ namespace ModbusTesting
             var result = await ReadHoldingRegister_SendMsgFormat(SlaveID, 0, 20);
             return result;
         }
+
+        public virtual async Task<bool> AllLightOffAsync(byte SlaveID)
+        {
+            var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 2 }, new byte[] { 0, 0 });
+            return result;
+        }
+        public virtual async Task<bool> ReadDIsAsync(byte SlaveID)
+        {
+            var result = await ReadCoilsCommand_SendMsgFormat(SlaveID, 0, 8);
+            return result;
+        }
+        public virtual async Task<bool> AllLightOnAsync(byte SlaveID)
+        {
+            var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 2 }, new byte[] { 255, 0 });
+            return result;
+        }
+
+
         public override bool ReceivedMsg(string msg)
         {
             if (!string.IsNullOrEmpty(msg) || !string.IsNullOrWhiteSpace(msg))
