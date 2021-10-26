@@ -104,35 +104,32 @@ namespace ModbusConnection
         {
             await taskFactory.StartNew(() =>
             {
-                try
+                string logstr = string.Format("{0} : {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), "Heart Beat Starts");
+                WriteLog(logstr, "Debug");
+                ushort temp = 1;
+                var gotByteData = temp.SplitShortToHighAndLowByte();
+                SendQueue.EnQueue(new SendStruct()
                 {
-                    string logstr = string.Format("{0} : {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), "Heart Beat Starts");
-                    WriteLog(logstr, "Debug");
-                    ushort temp = 1;
-                    var gotByteData = temp.SplitShortToHighAndLowByte();
-                    SendQueue.EnQueue(new SendStruct()
-                    {
-                        TransactionID = 15,
-                        ProtocolID = 0,
-                        Address = 1,
-                        FunctionCode = (byte)FunctionCode.ReadInputRegisters,
-                        StartAddress = 0,
-                        data = gotByteData,  /// 直接抓取實際數量
-                        dataLength = ((ushort)gotByteData.Length).SplitShortToHighAndLowByte().Length,
-                    });
-                    string logstrEnd = string.Format("{0} : {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), "Heart Beat Ends");
-
-                    WriteLog(logstrEnd, "Debug");
-                }
-                catch (Exception ex)
+                    TransactionID = 15,
+                    ProtocolID = 0,
+                    Address = 1,
+                    FunctionCode = (byte)FunctionCode.ReadInputRegisters,
+                    StartAddress = 0,
+                    data = gotByteData,  /// 直接抓取實際數量
+                    dataLength = ((ushort)gotByteData.Length).SplitShortToHighAndLowByte().Length,
+                });
+                string logstrEnd = string.Format("{0} : {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), "Heart Beat Ends");
+                WriteLog(logstrEnd, "Debug");
+                var timeout = autoReset.WaitOne(5000);
+                if (timeout.Equals(false))
                 {
-                    string logstr = string.Format("{0} : {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), ex.Message.ToString());
-
-                    WriteLog(logstr, "Error");
+                    string ConnectionStatus = string.Format("ConnectionStatus: {0}  AutoReset: {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),timeout.ToString());
+                    WriteLog(ConnectionStatus, "Error");
                     MasterClient.Client.Close();
                     TcpToConnect(HostIP, Port);
+                    toSendFlag = false;
+                    autoReset.Set();
                 }
-                autoReset.WaitOne();
                 string logstrFinished = string.Format("{0} : Heart Beat {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), "FinishedAutoReset");
                 WriteLog(logstrFinished, "Debug");
             });
@@ -162,7 +159,6 @@ namespace ModbusConnection
                     {
                         WriteLog(e.Message.ToString(), "Error");
                     }
-
                 }
                 SpinWait.SpinUntil(() => false, 2);
             }
@@ -664,8 +660,6 @@ namespace ModbusConnection
                 WriteLog(logstrEnd, "Debug");
             });
             return true;
-            //result = "OK";
-            //return result;
         }
 
         /// <param name="transactionID">autoIncrement</param>
@@ -821,8 +815,14 @@ namespace ModbusConnection
             }
             catch (Exception e)
             {
+                
                 string logstr = string.Format("ConnectionStatus: {0} : {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), e.Message.ToString());
                 WriteLog(logstr, "Error");
+                MasterClient.Client.Close();
+                //_streamFromServer.Close();
+                TcpToConnect(HostIP, Port);
+                toSendFlag = false;
+                autoReset.Set();
             }
 
         }
@@ -847,7 +847,6 @@ namespace ModbusConnection
                 {
                     ToConnect = true;
                     string logstr = string.Format("{0} : {1} ConnectionStatus: {2}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), "Connected", ToConnect.ToString());
-
                     WriteLog(logstr, "Debug");
                     ConnectionStatusChanged?.Invoke(ToConnect);
                 }
@@ -855,7 +854,6 @@ namespace ModbusConnection
                 {
                     ToConnect = false;
                     string logstr = string.Format("{0} : {1} ConnectionStatus: {2}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), "Disconnected", ToConnect.ToString());
-                    //Log.Logger.Debug(logstr);
                     WriteLog(logstr, "Debug");
                     _streamFromServer?.Close();
                     closed = false;
@@ -865,10 +863,8 @@ namespace ModbusConnection
             catch (Exception e)
             {
                 string logstr = string.Format("ConnectionStatus: {0} : {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), e.Message.ToString());
-                //Log.Logger.Debug(logstr);
                 WriteLog(logstr, "Error");
             }
-
         }
         private string CheckingErrorCode(byte er, byte ex)
         {

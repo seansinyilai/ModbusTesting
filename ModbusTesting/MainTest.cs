@@ -156,36 +156,68 @@ namespace ModbusTesting
 
         private async Task ReadCoils()
         {
+         //   var fgh = await ConnectionEstablishment.WriteGreenLightOffAsync(1);
+
+            //   var b = await ConnectionEstablishment.ReadAllLightsAsync(1);
             int idx = 0;
             await Task.Run(async () =>
             {
                 while (true)
                 {
+                    SpinWait.SpinUntil(() => false, 200);
 
-                    var a = await ConnectionEstablishment.AllLightOffAsync(1);
-                    if (a)
-                    {
-                        Console.WriteLine("輸入===> IO " + idx);
-                        idx++;
-                        //var b = await ConnectionEstablishment.ReadDIsAsync(1);
-                        var b = await ConnectionEstablishment.ReadAllLightsAsync(1);
-                        if (b)
-                        {
-                            Console.WriteLine("輸入===> IO " + idx);
-                            idx++;
-                            var c = await ConnectionEstablishment.AllLightOnAsync(1);
-                            if (c)
-                            {
-                                var d = await ConnectionEstablishment.ReadAllLightsAsync(1);
-                                Console.WriteLine("輸入===> IO " + idx);
-                                idx++;
-                            }
-                        }
+                    var ksadhfk = await ConnectionEstablishment.AllLightOnAsync(1);
 
-                    }
+                    SpinWait.SpinUntil(() => false, 200);
+                    var ksasdfsadadhfk = await ConnectionEstablishment.AllLightOffAsync(1);
 
-                    Console.WriteLine("輸入===> IO " + idx);
-                    idx++;
+                    //var asdasd = await ConnectionEstablishment.WriteYellowLightOnAsync(1);
+
+                    //SpinWait.SpinUntil(() => false, 200);
+
+                    //var sdafsadf = await ConnectionEstablishment.WriteYellowLightOffAsync(1);
+
+                    //SpinWait.SpinUntil(() => false, 200);
+
+                   
+                    //var asdasdfasd = await ConnectionEstablishment.WriteRedLightOnAsync(1);
+
+                    //SpinWait.SpinUntil(() => false, 200);
+
+                    //var sdafrrtysadf = await ConnectionEstablishment.WriteRedLightOffAsync(1);
+
+                    //SpinWait.SpinUntil(() => false, 200);   
+                    //var asdasdfdfgasd = await ConnectionEstablishment.WriteGreenLightOnAsync(1);
+
+                    //SpinWait.SpinUntil(() => false, 200);
+
+                    //var sdafrrtysdfgsadf = await ConnectionEstablishment.WriteGreenLightOffAsync(1);
+
+                    SpinWait.SpinUntil(() => false, 200);
+                    //var a = await ConnectionEstablishment.AllLightOffAsync(1);
+                    //if (a)
+                    //{
+                    //    Console.WriteLine("輸入===> IO " + idx);
+                    //    idx++;
+                    //    //var b = await ConnectionEstablishment.ReadDIsAsync(1);
+                    //    var b = await ConnectionEstablishment.ReadAllLightsAsync(1);
+                    //    if (b)
+                    //    {
+                    //        Console.WriteLine("輸入===> IO " + idx);
+                    //        idx++;
+                    //        var c = await ConnectionEstablishment.AllLightOnAsync(1);
+                    //        if (c)
+                    //        {
+                    //            var d = await ConnectionEstablishment.ReadAllLightsAsync(1);
+                    //            Console.WriteLine("輸入===> IO " + idx);
+                    //            idx++;
+                    //        }
+                    //    }
+
+                    // }
+
+                    //Console.WriteLine("輸入===> IO " + idx);
+                    //idx++;
                 }
             });
 
