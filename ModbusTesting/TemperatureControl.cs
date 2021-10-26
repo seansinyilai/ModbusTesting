@@ -45,6 +45,13 @@ namespace ModbusTesting
                 ConnectStatusChanged?.Invoke(connnectionStatus);
             };
         }
+        /// <summary>
+        /// 給予一個list的溫度以及時間參數
+        /// 依照參數設定Recipe
+        /// </summary>
+        /// <param name="SlaveID"></param>
+        /// <param name="listOfStruck"></param>
+        /// <returns></returns>
         public virtual async Task<bool> SetPZ900BufferPointsAsync(byte SlaveID, List<TempRecipeStruct> listOfStruck)
         {
             ushort shiftingIdx = 0;
@@ -68,16 +75,32 @@ namespace ModbusTesting
             var result2 = await SetPZ900ModeEnd(2, Convert.ToByte(listOfStruck.Count()));
             return result && result2;
         }
+        /// <summary>
+        /// 讀取 Recipe1 所有區段點位
+        /// </summary>
+        /// <param name="SlaveID"></param>
+        /// <returns></returns>
         public virtual async Task<bool> ReadPZ900BufferPointsAsync(byte SlaveID)
         {
-            var result = await ReadHoldingRegister_SendMsgFormat(SlaveID, 12288, 30);
+            var result = await ReadHoldingRegister_SendMsgFormat(SlaveID, 12288, 48);
             return result ;
         }
+        /// <summary>
+        /// 讀取段數設定點位
+        /// </summary>
+        /// <param name="SlaveID"></param>
+        /// <returns></returns>
         public virtual async Task<bool> ReadPZ900ModeEnd(byte SlaveID)
         {
             var result = await ReadHoldingRegister_SendMsgFormat(SlaveID, 20480, 1);
             return result;
         }
+        /// <summary>
+        /// 設定段數
+        /// </summary>
+        /// <param name="SlaveID"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
         public virtual async Task<bool> SetPZ900ModeEnd(byte SlaveID, byte data)
         {
             if (data.GetType() != typeof(byte))
@@ -93,31 +116,58 @@ namespace ModbusTesting
             var result = await SendWriteSingleRegisterMsgFormat(SlaveID, 20480, tmp);
             return result;
         }
+        /// <summary>
+        /// 讀取溫控器前20點位
+        /// </summary>
+        /// <param name="SlaveID"></param>
+        /// <returns></returns>
         public virtual async Task<bool> ReadPZ900PointsAsync(byte SlaveID)
         {
             var result = await ReadHoldingRegister_SendMsgFormat(SlaveID, 0, 20);
             return result;
         }
-
+        /// <summary>
+        /// Test用
+        /// </summary>
+        /// <param name="SlaveID"></param>
+        /// <returns></returns>
         public virtual async Task<bool> AllLightOffAsync(byte SlaveID)
         {
-            var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 2 }, new byte[] { 0, 0 });
-            return result;
+            //   var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 2 }, new byte[] { 0, 0 });
+            return false;
         }
+
+        /// <summary>
+        /// Test用
+        /// </summary>
+        /// <param name="SlaveID"></param>
+        /// <returns></returns>
         public virtual async Task<bool> ReadDIsAsync(byte SlaveID)
         {
-            var result = await ReadCoilsCommand_SendMsgFormat(SlaveID, 0, 8);
-            return result;
+            //  var result = await ReadCoilsCommand_SendMsgFormat(SlaveID, 0, 8);
+            return false;
         }
+        /// <summary>
+        /// Test用
+        /// </summary>
+        /// <param name="SlaveID"></param>
+        /// <returns></returns>
         public virtual async Task<bool> ReadAllLightsAsync(byte SlaveID)
         {
-            var result = await ReadCoilsCommand_SendMsgFormat(SlaveID, 16, 8);
-            return result;
+            //   var result = await ReadCoilsCommand_SendMsgFormat(SlaveID, 16, 8);
+            //   return result;
+            return false;
         }
+        /// <summary>
+        /// Test用
+        /// </summary>
+        /// <param name="SlaveID"></param>
+        /// <returns></returns>
         public virtual async Task<bool> AllLightOnAsync(byte SlaveID)
         {
-            var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 2 }, new byte[] { 255, 0 });
-            return result;
+            //    var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 2 }, new byte[] { 255, 0 });
+            //   return result;
+            return false;
         }
 
 
