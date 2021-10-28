@@ -7,11 +7,11 @@ using System.Windows;
 // 組件的一般資訊是由下列的屬性集控制。
 // 變更這些屬性的值即可修改組件的相關
 // 資訊。
-[assembly: AssemblyTitle("ModbusTesting")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("GP_Modbus")]
+[assembly: AssemblyDescription("TCP_Modbus for GP Group")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("ModbusTesting")]
+[assembly: AssemblyCompany("GP Group")]
+[assembly: AssemblyProduct("ModbusTCP")]
 [assembly: AssemblyCopyright("Copyright ©  2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

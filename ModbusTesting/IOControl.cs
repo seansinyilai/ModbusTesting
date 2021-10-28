@@ -53,8 +53,8 @@ namespace ModbusTesting
         }
         public virtual async Task<bool> AllLightOnAsync(byte SlaveID)
         {
-            var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 8 }, new byte[] { 255, 0 });
-         //   var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 19, new byte[] { 0, 2 }, new byte[] { 255, 0 });
+           var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 8 }, new byte[] { 255, 0 });
+          //  var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 19, new byte[] { 0, 2 }, new byte[] { 255, 0 });
             return result;
         }
         public virtual async Task<bool> WriteGreenLightOnAsync(byte SlaveID)
@@ -144,8 +144,9 @@ namespace ModbusTesting
                     }
                 }
                 idx++;
-                ResponseResult += "No: IO " + idx + msg + "\n";
-                // ResponseResult += "IOControl;" + msg + "\n";
+                // ResponseResult += "No: IO " + idx + msg + "\n";
+                ResponseResult += "IOControl;" + msg + "\n";
+                //ResponseResult = string.Empty;
                 ReceivedCallBackMsg(ResponseResult);
             }
             return true;

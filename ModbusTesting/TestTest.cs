@@ -8,7 +8,7 @@ namespace ModbusTesting
 {
     public class TestTest : IOControl
     {
-        private bool _testConnectionStatus; 
+        private bool _testConnectionStatus;
 
         public bool TestConnectionStatus
         {
@@ -21,10 +21,10 @@ namespace ModbusTesting
         }
         public TestTest(string hostIP, int port) : base(hostIP, port)
         {
-                ConnectStatusChanged += (connnectionStatus) =>
-                {
-                    TestConnectionStatus = connnectionStatus;
-                };
+            ConnectStatusChanged += (connnectionStatus) =>
+            {
+                TestConnectionStatus = connnectionStatus;
+            };
         }
 
         public override bool ReceivedCallBackMsg(string msg)

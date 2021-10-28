@@ -123,7 +123,7 @@ namespace ModbusConnection
                 var timeout = autoReset.WaitOne(5000);
                 if (timeout.Equals(false))
                 {
-                    string ConnectionStatus = string.Format("ConnectionStatus: {0}  AutoReset: {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),timeout.ToString());
+                    string ConnectionStatus = string.Format("ConnectionStatus: {0}  AutoReset: {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), timeout.ToString());
                     WriteLog(ConnectionStatus, "Error");
                     MasterClient.Client.Close();
                     TcpToConnect(HostIP, Port);
@@ -432,6 +432,7 @@ namespace ModbusConnection
         /// <param name="data">data to send</param>
         public async Task<bool> SendWriteSingleCoilMsgFormat(byte SlaveID, ushort StartAddress, byte[] data)
         {
+            bool timeout = false;
             await taskFactory.StartNew(() =>
              {
                  string result = string.Empty;
@@ -453,7 +454,15 @@ namespace ModbusConnection
                      data = data,                                  ///陣列長度
                      dataLength = data.Length,
                  });
-                 autoReset.WaitOne();
+                 // autoReset.WaitOne();
+                 timeout = autoReset.WaitOne(5000);
+                 if (timeout.Equals(false))
+                 {
+                     string WriteSingleCoilVar = string.Format("[Timeout] WriteSingleCoil: {0}  AutoReset: {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), timeout.ToString());
+                     WriteLog(WriteSingleCoilVar, "Error");
+                     toSendFlag = false;
+                     autoReset.Set();
+                 }
                  string logstrEnd = string.Format("SendWriteSingleCoilEnds:{0} " +
                                                             "SlaveID={1} StartAddress={2} " +
                                                             "result={3} autoIncrement={4}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
@@ -463,7 +472,7 @@ namespace ModbusConnection
                                                             autoIncrement.ToString());
                  WriteLog(logstrEnd, "Debug");
              });
-            return true;
+            return true && timeout;
         }
         /// <param name="transactionID">autoIncrement</param>
         /// <param name="protocolID">0 modbus</param>
@@ -473,6 +482,7 @@ namespace ModbusConnection
         /// <param name="data">data to send</param>
         public async Task<bool> SendWriteSingleRegisterMsgFormat(byte SlaveID, ushort StartAddress, byte[] data)
         {
+            bool timeout = false;
             await taskFactory.StartNew(() =>
            {
                string result = string.Empty;
@@ -495,7 +505,15 @@ namespace ModbusConnection
                    data = data,                                  ///陣列長度
                    dataLength = data.Length,
                });
-               autoReset.WaitOne();
+               //   autoReset.WaitOne();
+               timeout = autoReset.WaitOne(5000);
+               if (timeout.Equals(false))
+               {
+                   string WriteSingleCoilVar = string.Format("[Timeout] WriteSingleRegister: {0}  AutoReset: {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), timeout.ToString());
+                   WriteLog(WriteSingleCoilVar, "Error");
+                   toSendFlag = false;
+                   autoReset.Set();
+               }
                string logstrEnd = string.Format("SendWriteSingleRegisterEnds:{0} " +
                                                           "SlaveID={1} StartAddress={2} " +
                                                           "result={3} autoIncrement={4}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
@@ -505,7 +523,7 @@ namespace ModbusConnection
                                                           autoIncrement.ToString());
                WriteLog(logstrEnd, "Debug");
            });
-            return true;
+            return true && timeout;
         }
         /// <param name="transactionID">autoIncrement</param>
         /// <param name="protocolID">0 modbus</param>
@@ -515,6 +533,7 @@ namespace ModbusConnection
         /// <param name="data">data to send</param>
         public async Task<bool> SendWriteMultipleCoilsMsgFormat(byte SlaveID, ushort StartAddress, byte[] outPutQuantityHighLowBit, params byte[][] multiOutputData)
         {
+            bool timeout = false;
             await taskFactory.StartNew(() =>
             {
                 string result = string.Empty;
@@ -576,7 +595,15 @@ namespace ModbusConnection
                     data = data,                                  ///陣列長度
                     dataLength = data.Length,
                 });
-                autoReset.WaitOne();
+                //autoReset.WaitOne();
+                timeout = autoReset.WaitOne(5000);
+                if (timeout.Equals(false))
+                {
+                    string WriteSingleCoilVar = string.Format("[Timeout] WriteMultipleCoils: {0}  AutoReset: {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), timeout.ToString());
+                    WriteLog(WriteSingleCoilVar, "Error");
+                    toSendFlag = false;
+                    autoReset.Set();
+                }
                 string logstrEnd = string.Format("SendWriteMultipleCoilsEnds:{0} " +
                                            "SlaveID={1} StartAddress={2} " +
                                            "result={3} autoIncrement={4}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
@@ -586,7 +613,7 @@ namespace ModbusConnection
                                            autoIncrement.ToString());
                 WriteLog(logstr, "Debug");
             });
-            return true;
+            return true && timeout;
             //result = "OK";
             //return result;
         }
@@ -599,6 +626,7 @@ namespace ModbusConnection
         /// <param name="data">data to send</param>
         public async Task<bool> SendWriteMultipleRegistersMsgFormat(byte SlaveID, ushort StartAddress, byte[] quantityHighLowBit, params byte[][] multipleData)
         {
+            bool timeout = false;
             await taskFactory.StartNew(() =>
             {
                 string result = string.Empty;
@@ -649,7 +677,15 @@ namespace ModbusConnection
                     data = data,                                  ///陣列長度
                     dataLength = data.Length,
                 });
-                autoReset.WaitOne();
+                //autoReset.WaitOne();
+                timeout = autoReset.WaitOne(5000);
+                if (timeout.Equals(false))
+                {
+                    string WriteSingleCoilVar = string.Format("[Timeout] WriteMultipleRegisters: {0}  AutoReset: {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), timeout.ToString());
+                    WriteLog(WriteSingleCoilVar, "Error");
+                    toSendFlag = false;
+                    autoReset.Set();
+                }
                 string logstrEnd = string.Format("SendWriteMultipleRegistersEnds:{0} " +
                                            "SlaveID={1} StartAddress={2} " +
                                            "result={3} autoIncrement={4}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
@@ -659,7 +695,7 @@ namespace ModbusConnection
                                            autoIncrement.ToString());
                 WriteLog(logstrEnd, "Debug");
             });
-            return true;
+            return true && timeout;
         }
 
         /// <param name="transactionID">autoIncrement</param>
@@ -670,6 +706,7 @@ namespace ModbusConnection
         /// <param name="data">data to send</param>
         public async Task<bool> ReadCoilsCommand_SendMsgFormat(byte SlaveID, ushort StartAddress, ushort numberOfDataToRead)
         {
+            bool timeout = false;
             await taskFactory.StartNew(() =>
             {
                 string logstr = string.Format("ReadCoilsCommandStarts:{0} SlaveID={1} StartAddress={2} numberOfDataToRead={3}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), SlaveID.ToString(), StartAddress.ToString(), numberOfDataToRead.ToString());
@@ -686,7 +723,15 @@ namespace ModbusConnection
                     data = gotByteData,  /// 直接抓取實際數量
                     dataLength = ((ushort)gotByteData.Length).SplitShortToHighAndLowByte().Length,
                 });
-                autoReset.WaitOne();
+                //autoReset.WaitOne();
+                timeout = autoReset.WaitOne(5000);
+                if (timeout.Equals(false))
+                {
+                    string WriteSingleCoilVar = string.Format("[Timeout] ReadCoils: {0}  AutoReset: {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), timeout.ToString());
+                    WriteLog(WriteSingleCoilVar, "Error");
+                    toSendFlag = false;
+                    autoReset.Set();
+                }
                 string logstrEnd = string.Format("ReadCoilsCommandEnds:{0} " +
                                              "SlaveID={1} StartAddress={2} " +
                                              "numberOfDataToRead={3} autoIncrement={4}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
@@ -696,7 +741,7 @@ namespace ModbusConnection
                                              autoIncrement.ToString());
                 WriteLog(logstrEnd, "Debug");
             });
-            return true;
+            return true && timeout;
             //  return "OK";
         }
         /// <param name="transactionID">autoIncrement</param>
@@ -707,6 +752,7 @@ namespace ModbusConnection
         /// <param name="data">data to send</param>
         public async Task<bool> ReadDiscreteInputs_SendMsgFormat(byte SlaveID, ushort StartAddress, ushort numberOfDataToRead)
         {
+            bool timeout = false;
             await taskFactory.StartNew(() =>
             {
                 string logstr = string.Format("ReadDiscreteInputsStarts:{0} SlaveID={1} StartAddress={2} numberOfDataToRead={3}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), SlaveID.ToString(), StartAddress.ToString(), numberOfDataToRead.ToString());
@@ -723,7 +769,15 @@ namespace ModbusConnection
                     data = gotByteData,  /// 直接抓取實際數量
                     dataLength = ((ushort)gotByteData.Length).SplitShortToHighAndLowByte().Length,
                 });
-                autoReset.WaitOne();
+                //autoReset.WaitOne();
+                timeout = autoReset.WaitOne(5000);
+                if (timeout.Equals(false))
+                {
+                    string WriteSingleCoilVar = string.Format("[Timeout] ReadDiscreteInputs: {0}  AutoReset: {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), timeout.ToString());
+                    WriteLog(WriteSingleCoilVar, "Error");
+                    toSendFlag = false;
+                    autoReset.Set();
+                }
                 string logstrEnd = string.Format("ReadDiscreteInputsEnds:{0} " +
                                                 "SlaveID={1} StartAddress={2} " +
                                                 "numberOfDataToRead={3} autoIncrement={4}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
@@ -733,7 +787,7 @@ namespace ModbusConnection
                                                 autoIncrement.ToString());
                 WriteLog(logstrEnd, "Debug");
             });
-            return true;
+            return true && timeout;
         }
         /// <param name="transactionID">autoIncrement</param>
         /// <param name="protocolID">0 modbus</param>
@@ -743,6 +797,7 @@ namespace ModbusConnection
         /// <param name="data">data to send</param>
         public async Task<bool> ReadHoldingRegister_SendMsgFormat(byte SlaveID, ushort StartAddress, ushort numberOfDataToRead)
         {
+            bool timeout = false;
             await taskFactory.StartNew(() =>
             {
                 string logstr = string.Format("ReadHoldingRegisterStarts:{0} SlaveID={1} StartAddress={2} numberOfDataToRead={3}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), SlaveID.ToString(), StartAddress.ToString(), numberOfDataToRead.ToString());
@@ -759,7 +814,15 @@ namespace ModbusConnection
                     data = gotByteData,  /// 直接抓取實際數量
                     dataLength = ((ushort)gotByteData.Length).SplitShortToHighAndLowByte().Length,
                 });
-                autoReset.WaitOne();
+                //autoReset.WaitOne();
+                timeout = autoReset.WaitOne(5000);
+                if (timeout.Equals(false))
+                {
+                    string WriteSingleCoilVar = string.Format("[Timeout] ReadHoldingRegister: {0}  AutoReset: {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), timeout.ToString());
+                    WriteLog(WriteSingleCoilVar, "Error");
+                    toSendFlag = false;
+                    autoReset.Set();
+                }
                 string logstrEnd = string.Format("ReadHoldingRegisterEnds:{0} " +
                                                 "SlaveID={1} StartAddress={2} " +
                                                 "numberOfDataToRead={3} autoIncrement={4}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
@@ -769,7 +832,7 @@ namespace ModbusConnection
                                                 autoIncrement.ToString());
                 WriteLog(logstrEnd, "Debug");
             });
-            return true;
+            return true && timeout;
         }
         public void SENDRequest(SendStruct obj)
         {
@@ -815,7 +878,6 @@ namespace ModbusConnection
             }
             catch (Exception e)
             {
-                
                 string logstr = string.Format("ConnectionStatus: {0} : {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), e.Message.ToString());
                 WriteLog(logstr, "Error");
                 MasterClient.Client.Close();
@@ -824,7 +886,6 @@ namespace ModbusConnection
                 toSendFlag = false;
                 autoReset.Set();
             }
-
         }
         private List<Tuple<string, byte[]>> Header_PDU_Data(CommandStruct obj)
         {

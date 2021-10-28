@@ -70,7 +70,6 @@ namespace ModbusTesting
                  value1 = tmpStruct.Temperature.SplitShortToHighAndLowByte();
                  value2 = tmpStruct.TempTime.SplitShortToHighAndLowByte();
                  result = await SendWriteMultipleRegistersMsgFormat(SlaveID, mPoints, new byte[] { 0, 2 }, value1, value2);
-                
              });
             var result2 = await SetPZ900ModeEnd(2, Convert.ToByte(listOfStruck.Count()));
             return result && result2;
@@ -126,6 +125,11 @@ namespace ModbusTesting
             var result = await ReadHoldingRegister_SendMsgFormat(SlaveID, 0, 20);
             return result;
         }
+        public virtual async Task<bool> ReadPZ900AllPointsAsync(byte SlaveID)
+        {
+            var result = await ReadHoldingRegister_SendMsgFormat(SlaveID, 100, 100);
+            return result;
+        }
         /// <summary>
         /// Test用
         /// </summary>
@@ -133,7 +137,8 @@ namespace ModbusTesting
         /// <returns></returns>
         public virtual async Task<bool> AllLightOffAsync(byte SlaveID)
         {
-            //   var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 2 }, new byte[] { 0, 0 });
+            //var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 2 }, new byte[] { 0, 0 });
+            //return result;
             return false;
         }
 
@@ -154,9 +159,9 @@ namespace ModbusTesting
         /// <returns></returns>
         public virtual async Task<bool> ReadAllLightsAsync(byte SlaveID)
         {
-            //   var result = await ReadCoilsCommand_SendMsgFormat(SlaveID, 16, 8);
-            //   return result;
-            return false;
+            var result = await ReadCoilsCommand_SendMsgFormat(SlaveID, 16, 8);
+            return result;
+            //return false;
         }
         /// <summary>
         /// Test用
@@ -165,8 +170,8 @@ namespace ModbusTesting
         /// <returns></returns>
         public virtual async Task<bool> AllLightOnAsync(byte SlaveID)
         {
-            //    var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 2 }, new byte[] { 255, 0 });
-            //   return result;
+            //var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 2 }, new byte[] { 255, 0 });
+            //return result;
             return false;
         }
 
@@ -206,8 +211,9 @@ namespace ModbusTesting
                     }
                 }
                 idx++;
-                ResponseResult += "No: temp " + idx + msg + "\n";
-                // ResponseResult += "TemperatureControl;" + msg + "\n";
+                //ResponseResult += "No: temp " + idx + msg + "\n";
+                ResponseResult += "TemperatureControl;" + msg + "\n";
+                //ResponseResult = string.Empty;
                 ReceivedCallBackMsg(ResponseResult);
             }
             return true;
