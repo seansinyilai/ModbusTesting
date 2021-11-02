@@ -137,9 +137,9 @@ namespace ModbusTesting
         /// <returns></returns>
         public virtual async Task<bool> AllLightOffAsync(byte SlaveID)
         {
-            var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 2 }, new byte[] { 0, 0 });
-            return result;
-            // return false;
+            //var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 2 }, new byte[] { 0, 0 });
+            //return result;
+             return false;
         }
 
         /// <summary>
@@ -159,9 +159,9 @@ namespace ModbusTesting
         /// <returns></returns>
         public virtual async Task<bool> ReadAllLightsAsync(byte SlaveID)
         {
-            var result = await ReadCoilsCommand_SendMsgFormat(SlaveID, 16, 8);
-            return result;
-            //return false;
+            //var result = await ReadCoilsCommand_SendMsgFormat(SlaveID, 16, 8);
+            //return result;
+            return false;
         }
         /// <summary>
         /// Test用
@@ -170,9 +170,9 @@ namespace ModbusTesting
         /// <returns></returns>
         public virtual async Task<bool> AllLightOnAsync(byte SlaveID)
         {
-            var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 2 }, new byte[] { 255, 0 });
-            return result;
-            //return false;
+            //var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 2 }, new byte[] { 255, 0 });
+            //return result;
+            return false;
         }
 
 

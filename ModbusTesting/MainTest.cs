@@ -103,7 +103,7 @@ namespace ModbusTesting
             {
                 while (true)
                 {
-                    var a = await ConnectionEstablishment2.ReadPZ900PointsAsync(1);
+                    var a = await ConnectionEstablishment2.ReadPZ900PointsAsync(2);
                     //  var a = await ConnectionEstablishment2.ReadPZ900AllPointsAsync(2);
                     if (a)
                     {
@@ -112,24 +112,24 @@ namespace ModbusTesting
                         List<TempRecipeStruct> lsTmep = new List<TempRecipeStruct>();
                         lsTmep.Add(new TempRecipeStruct() { Temperature = 70, TempTime = 7 });
                         lsTmep.Add(new TempRecipeStruct() { Temperature = 333, TempTime = 3 });
-                      //  var b = await ConnectionEstablishment2.SetPZ900BufferPointsAsync(2, lsTmep);
-                           var b = await ConnectionEstablishment2.AllLightOnAsync(1);
+                          var b = await ConnectionEstablishment2.SetPZ900BufferPointsAsync(2, lsTmep);
+                      //  var b = await ConnectionEstablishment2.AllLightOnAsync(1);
                         if (b)
                         {
                             idx++;
                             Console.WriteLine("輸入===> temp " + idx);
                             //var c = await ConnectionEstablishment2.ReadDIsAsync(1);
-                            var c = await ConnectionEstablishment2.ReadAllLightsAsync(1);
-                            if (c)
-                            {
-                                var d = await ConnectionEstablishment2.AllLightOffAsync(1);
-                                idx++;
-                                Console.WriteLine("輸入===> temp " + idx);
-                            }
+                            //var c = await ConnectionEstablishment2.ReadAllLightsAsync(1);
+                            //if (c)
+                            //{
+                            //    var d = await ConnectionEstablishment2.AllLightOffAsync(1);
+                            //    idx++;
+                            //    Console.WriteLine("輸入===> temp " + idx);
+                            //}
                         }
                     }
-                    idx++;
-                    Console.WriteLine("輸入===> temp " + idx);
+                    //idx++;
+                    //Console.WriteLine("輸入===> temp " + idx);
                     iii++;
                 }
             });
