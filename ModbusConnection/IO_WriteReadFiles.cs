@@ -49,7 +49,7 @@ namespace ModbusConnection
                 {
                     Directory.CreateDirectory(FolderFileName);
                 }
-                var FileName = FolderFileName + "\\" + FolderName[3];
+                var FileName = FolderFileName + "\\" + string.Format("{0} _ {1}", DateTime.Now.ToString("yyyyMMdd"), FolderName[3]);
                 if (!File.Exists(FileName))
                 {
                     using (FileStream fileStream = new FileStream(FileName, FileMode.Create))
@@ -66,8 +66,6 @@ namespace ModbusConnection
                     }
                 }
             }
-          
-
         }
     }
     public class WriteIOClassQueue
