@@ -27,8 +27,9 @@ namespace ModbusTesting
         {
 
             //ConnectionEstablishment = new IOControl("192.168.0.112", 502);           
-            ConnectionEstablishment = new TestTest("192.168.0.112", 502);
-            ConnectionEstablishment2 = new TestTest2("192.168.0.112", 502);
+            ConnectionEstablishment = new TestTest("127.0.0.1", 502);
+            //ConnectionEstablishment = new TestTest("192.168.3.22", 502);
+            ConnectionEstablishment2 = new TestTest2("192.168.0.110", 502);
             ////ConnectionEstablishment = new IOControl("127.0.0.1", 502);
             ReadCoilsSEND = new RelayCommand(async e => { await ReadCoils(); });
             ReadDiscreteInputsSEND = new RelayCommand(async e => { await ReadDiscreteInputs(); });
@@ -54,18 +55,28 @@ namespace ModbusTesting
 
         private async Task SendWriteMultipleCoils()
         {
-            //ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 20, new byte[] { 0, 40 }, new byte[] { 205, 01 }, new byte[] { 125, 20 });
-            var asdf = await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 16, new byte[] { 0, 16 }, new byte[] { 0, 0 });
+            //await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 20, new byte[] { 0, 40 }, new byte[] { 205, 01 }, new byte[] { 125, 20 });
+            //await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 20, new byte[] { 0, 56 }, new byte[] { 205, 01 }, new byte[] { 125, 20 }, new byte[] { 20, 50 });
+            //await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 20, new byte[] { 0, 80 }, new byte[] { 50, 0 }, new byte[] { 255, 0 }, new byte[] { 255, 0 }, new byte[] { 255, 0 }, new byte[] { 255, 0 });
+
+            var asdf = await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 8, new byte[] { 0, 2 }, new byte[] { 255, 0 });
+            //var asdf = await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 16, new bool[] { true, false, true, false, true });
         }
 
         private async Task SendWriteSingleRegister()
         {
-            await ConnectionEstablishment.SendWriteSingleRegisterMsgFormat(2, 1, new byte[] { 0, 3 });
+            await ConnectionEstablishment.SendWriteSingleRegisterMsgFormat(1, 1, 750);
+            //await ConnectionEstablishment.SendWriteSingleRegisterMsgFormat(2, 12289, new byte[] { 0, 60 });
+            // await ConnectionEstablishment.ReadHoldingRegister_SendMsgFormat(2, 12289, 1);
         }
 
         private async Task SendWriteSingleCoil()
         {
-            await ConnectionEstablishment.SendWriteSingleCoilMsgFormat(1, 17, new byte[] { 0, 0 });
+            //await ConnectionEstablishment.SendWriteSingleCoilMsgFormat(1, 17, new byte[] { 0, 0 });
+            await ConnectionEstablishment.SendWriteSingleCoilMsgFormat(1, 17, 1);
+            SpinWait.SpinUntil(() => false, 5000);
+            await ConnectionEstablishment.SendWriteSingleCoilMsgFormat(1, 17, 0);
+
         }
 
         private async Task ReadHoldingRegisters()
@@ -74,11 +85,12 @@ namespace ModbusTesting
             //ConnectionEstablishment.ReadHoldingRegister_SendMsgFormat(1, 108, 3);
             //ConnectionEstablishment.ReadHoldingRegister_SendMsgFormat(1, 0, 3);
             // ConnectionEstablishment.ReadHoldingRegister_SendMsgFormat(2, 48, 3);
+            //       var a = await ConnectionEstablishment2.ReadPZ900ModeEnd(2);
             await Task.Run(async () =>
             {
                 while (true)
                 {
-                    await ConnectionEstablishment.ReadHoldingRegister_SendMsgFormat(2, 0, 20);
+                    var asd = await ConnectionEstablishment.ReadHoldingRegister_SendMsgFormat(1, 0, 20);
 
                 }
             });
@@ -89,7 +101,7 @@ namespace ModbusTesting
             //ConnectionEstablishment.ReadDiscreteInputs_SendMsgFormat(1, 197, 22);
             int idx = 0;
             int iii = 0;
-            //////var a = await ConnectionEstablishment2.ReadPZ900ModeEnd(2);
+            //var a = await ConnectionEstablishment2.ReadPZ900ModeEnd(2);
             //////List<TempRecipeStruct> lsTmep = new List<TempRecipeStruct>();
             //////lsTmep.Add(new TempRecipeStruct() {Temperature = 70,TempTime=7 });
             //////lsTmep.Add(new TempRecipeStruct() {Temperature = 333,TempTime=3});
@@ -98,41 +110,43 @@ namespace ModbusTesting
             ////////var b = await ConnectionEstablishment2.SetPZ900ModeEnd(2,6);
             //////var c = await ConnectionEstablishment2.ReadPZ900ModeEnd(2);
             ///
+            #region TempClosed
+            //await Task.Run(async () =>
+            //{
+            //    while (true)
+            //    {
+            //        var a = await ConnectionEstablishment2.ReadPZ900PointsAsync(2);
+            //        //  var a = await ConnectionEstablishment2.ReadPZ900AllPointsAsync(2);
+            //        if (a)
+            //        {
+            //            idx++;
+            //            Console.WriteLine("輸入===> temp " + idx);
+            //            List<TempRecipeStruct> lsTmep = new List<TempRecipeStruct>();
+            //            lsTmep.Add(new TempRecipeStruct() { Temperature = 70, TempTime = 7 });
+            //            lsTmep.Add(new TempRecipeStruct() { Temperature = 333, TempTime = 3 });
+            //            var b = await ConnectionEstablishment2.SetPZ900BufferPointsAsync(2, lsTmep);
+            //            //  var b = await ConnectionEstablishment2.AllLightOnAsync(1);
+            //            if (b)
+            //            {
+            //                idx++;
+            //                Console.WriteLine("輸入===> temp " + idx);
+            //                //var c = await ConnectionEstablishment2.ReadDIsAsync(1);
+            //                //var c = await ConnectionEstablishment2.ReadAllLightsAsync(1);
+            //                //if (c)
+            //                //{
+            //                //    var d = await ConnectionEstablishment2.AllLightOffAsync(1);
+            //                //    idx++;
+            //                //    Console.WriteLine("輸入===> temp " + idx);
+            //                //}
+            //            }
+            //        }
+            //        //idx++;
+            //        //Console.WriteLine("輸入===> temp " + idx);
+            //        iii++;
+            //    }
+            //});
+            #endregion
 
-            await Task.Run(async () =>
-            {
-                while (true)
-                {
-                    var a = await ConnectionEstablishment2.ReadPZ900PointsAsync(2);
-                    //  var a = await ConnectionEstablishment2.ReadPZ900AllPointsAsync(2);
-                    if (a)
-                    {
-                        idx++;
-                        Console.WriteLine("輸入===> temp " + idx);
-                        List<TempRecipeStruct> lsTmep = new List<TempRecipeStruct>();
-                        lsTmep.Add(new TempRecipeStruct() { Temperature = 70, TempTime = 7 });
-                        lsTmep.Add(new TempRecipeStruct() { Temperature = 333, TempTime = 3 });
-                          var b = await ConnectionEstablishment2.SetPZ900BufferPointsAsync(2, lsTmep);
-                      //  var b = await ConnectionEstablishment2.AllLightOnAsync(1);
-                        if (b)
-                        {
-                            idx++;
-                            Console.WriteLine("輸入===> temp " + idx);
-                            //var c = await ConnectionEstablishment2.ReadDIsAsync(1);
-                            //var c = await ConnectionEstablishment2.ReadAllLightsAsync(1);
-                            //if (c)
-                            //{
-                            //    var d = await ConnectionEstablishment2.AllLightOffAsync(1);
-                            //    idx++;
-                            //    Console.WriteLine("輸入===> temp " + idx);
-                            //}
-                        }
-                    }
-                    //idx++;
-                    //Console.WriteLine("輸入===> temp " + idx);
-                    iii++;
-                }
-            });
             //new Thread(() =>
             //{
             //    int idx = 0;
@@ -165,75 +179,113 @@ namespace ModbusTesting
             //   var fgh = await ConnectionEstablishment.WriteGreenLightOffAsync(1);
 
             //   var b = await ConnectionEstablishment.ReadAllLightsAsync(1);
+
+
+            //var asdasdfasd = await ConnectionEstablishment.WriteRedLightOnAsync(1);
+
+            //SpinWait.SpinUntil(() => false, 10000);
+
+            //var sdafrrtysadf = await ConnectionEstablishment.WriteRedLightOffAsync(1);
+
+            //var asdasd = await ConnectionEstablishment.WriteYellowLightOnAsync(1);
+
+            //SpinWait.SpinUntil(() => false, 10000);
+
+            //var sdafsadf = await ConnectionEstablishment.WriteYellowLightOffAsync(1);
+
+            //////////SpinWait.SpinUntil(() => false, 200);
+            //var asdasdfdfgasd = await ConnectionEstablishment.WriteGreenLightOnAsync(1);
+
+            //SpinWait.SpinUntil(() => false, 10000);
+
+            //var sdafrrtysdfgsadf = await ConnectionEstablishment.WriteGreenLightOffAsync(1);
+
+            //var asdfsadqweqwe = await ConnectionEstablishment.WriteBuzzerOnAsync(1);
+
+            //SpinWait.SpinUntil(() => false, 10000);
+
+            //var asdfsadqweqwe2 = await ConnectionEstablishment.WriteBuzzerOffAsync(1);
+
+            ////////SpinWait.SpinUntil(() => false, 200);   
+
+
+
+            #region tmpeclosed
+
+
+
             int idx = 0;
             int iiii = 0;
             await Task.Run(async () =>
             {
                 while (true)
                 {
-                    //////SpinWait.SpinUntil(() => false, 200);
+                    //SpinWait.SpinUntil(() => false, 200);
 
-                    //////var ksadhfk = await ConnectionEstablishment.AllLightOnAsync(1);
+                    //var ksadhfk = await ConnectionEstablishment.AllLightOnAsync(1);
 
-                    //////SpinWait.SpinUntil(() => false, 200);
-                    //////var ksasdfsadadhfk = await ConnectionEstablishment.AllLightOffAsync(1);
+                    //SpinWait.SpinUntil(() => false, 200);
+                    //var ksasdfsadadhfk = await ConnectionEstablishment.AllLightOffAsync(1);
 
-                    ////////var asdasd = await ConnectionEstablishment.WriteYellowLightOnAsync(1);
+                    //var asdasd = await ConnectionEstablishment.WriteYellowLightOnAsync(1);
 
-                    ////////SpinWait.SpinUntil(() => false, 200);
+                    //SpinWait.SpinUntil(() => false, 200);
 
-                    ////////var sdafsadf = await ConnectionEstablishment.WriteYellowLightOffAsync(1);
+                    //var sdafsadf = await ConnectionEstablishment.WriteYellowLightOffAsync(1);
 
-                    ////////SpinWait.SpinUntil(() => false, 200);
+                    //SpinWait.SpinUntil(() => false, 200);
 
 
-                    ////////var asdasdfasd = await ConnectionEstablishment.WriteRedLightOnAsync(1);
+                    //var asdasdfasd = await ConnectionEstablishment.WriteRedLightOnAsync(1);
 
-                    ////////SpinWait.SpinUntil(() => false, 200);
+                    //SpinWait.SpinUntil(() => false, 200);
 
-                    ////////var sdafrrtysadf = await ConnectionEstablishment.WriteRedLightOffAsync(1);
+                    //var sdafrrtysadf = await ConnectionEstablishment.WriteRedLightOffAsync(1);
 
-                    ////////SpinWait.SpinUntil(() => false, 200);   
-                    ////////var asdasdfdfgasd = await ConnectionEstablishment.WriteGreenLightOnAsync(1);
+                    //SpinWait.SpinUntil(() => false, 200);   
+                    //var asdasdfdfgasd = await ConnectionEstablishment.WriteGreenLightOnAsync(1);
 
-                    ////////SpinWait.SpinUntil(() => false, 200);
+                    //SpinWait.SpinUntil(() => false, 200);
 
-                    ////////var sdafrrtysdfgsadf = await ConnectionEstablishment.WriteGreenLightOffAsync(1);
+                    //var sdafrrtysdfgsadf = await ConnectionEstablishment.WriteGreenLightOffAsync(1);
 
-                    //////SpinWait.SpinUntil(() => false, 200);
-                    var a = await ConnectionEstablishment.AllLightOffAsync(1);
-                    if (a)
-                    {
-
-                        idx++;
-                        Console.WriteLine("輸入===> IO " + idx);
-                        //var b = await ConnectionEstablishment.ReadDIsAsync(1);
-                        var b = await ConnectionEstablishment.ReadAllLightsAsync(1);
-                        if (b)
-                        {
-
-                            idx++;
-                            Console.WriteLine("輸入===> IO " + idx);
-                            var c = await ConnectionEstablishment.AllLightOnAsync(1);
-                            if (c)
-                            {
-                                idx++;
-                                Console.WriteLine("輸入===> IO " + idx);
-                                var d = await ConnectionEstablishment.ReadAllLightsAsync(1);
-                            }
-                        }
-
-                    }
-                    idx++;
-                    Console.WriteLine("輸入===> IO " + idx);
-                    iiii++;
-                    //if (iiii==1)
+                    SpinWait.SpinUntil(() => false, 200);
+                    //#region TempClose
+                    //var a = await ConnectionEstablishment.AllLightOffAsync(1);
+                    //if (a)
                     //{
 
+                    //    idx++;
+                    //    Console.WriteLine("輸入===> IO " + idx);
+                    //    var b = await ConnectionEstablishment.ReadDIsAsync(1);
+                    //    var b = await ConnectionEstablishment.ReadAllLightsAsync(1);
+                    //    if (b)
+                    //    {
+
+                    //        idx++;
+                    //        Console.WriteLine("輸入===> IO " + idx);
+                    //        var c = await ConnectionEstablishment.AllLightOnAsync(1);
+                    //        if (c)
+                    //        {
+                    //            idx++;
+                    //            Console.WriteLine("輸入===> IO " + idx);
+                    //            var d = await ConnectionEstablishment.ReadAllLightsAsync(1);
+                    //        }
+                    //    }
+
                     //}
+                    //idx++;
+                    //Console.WriteLine("輸入===> IO " + idx);
+                    //iiii++;
+                    //#endregion
+
+                    if (iiii == 1)
+                    {
+
+                    }
                 }
             });
-
+            #endregion
             //  var result= await ConnectionEstablishment.ReadDIsAsync(1);
             //await Task.Run(() =>
             //  {

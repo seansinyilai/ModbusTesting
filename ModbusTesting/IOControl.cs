@@ -53,55 +53,56 @@ namespace ModbusTesting
         }
         public virtual async Task<bool> AllLightOnAsync(byte SlaveID)
         {
-           var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 8 }, new byte[] { 255, 0 });
-           // var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 19, new byte[] { 0, 2 }, new byte[] { 255, 0 });
-            return result;
+            //var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 8 }, new byte[] { 255, 0 });
+            // var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 19, new byte[] { 0, 2 }, new byte[] { 255, 0 });
+            var result = false;
+            return result ;
         }
         public virtual async Task<bool> WriteGreenLightOnAsync(byte SlaveID)
         {
-            var result = await SendWriteSingleCoilMsgFormat(SlaveID, 16, new byte[] { 255, 0 });
+            var result = await SendWriteSingleCoilMsgFormat(SlaveID, 16, 1);
             return result;
         }
         public virtual async Task<bool> WriteYellowLightOnAsync(byte SlaveID)
-        {
-            var result = await SendWriteSingleCoilMsgFormat(SlaveID, 17, new byte[] { 255, 0 });
+        {// new byte[] { 255, 0 }
+            var result = await SendWriteSingleCoilMsgFormat(SlaveID, 17, 1);
             return result;
         }
         public virtual async Task<bool> WriteRedLightOnAsync(byte SlaveID)
         {
-            var result = await SendWriteSingleCoilMsgFormat(SlaveID, 18, new byte[] { 255, 0 });
+            var result = await SendWriteSingleCoilMsgFormat(SlaveID, 18, 1);
             return result;
         }
         public virtual async Task<bool> WriteBuzzerOnAsync(byte SlaveID)
         {
-            var result = await SendWriteSingleCoilMsgFormat(SlaveID, 19, new byte[] { 255, 0 });
+            var result = await SendWriteSingleCoilMsgFormat(SlaveID, 19, 1);
             return result;
         }
         public virtual async Task<bool> WriteGreenLightOffAsync(byte SlaveID)
         {
-            var result = await SendWriteSingleCoilMsgFormat(SlaveID, 16, new byte[] { 0, 0 });
+            var result = await SendWriteSingleCoilMsgFormat(SlaveID, 16, 0);
             return result;
         }
         public virtual async Task<bool> WriteYellowLightOffAsync(byte SlaveID)
         {
-            var result = await SendWriteSingleCoilMsgFormat(SlaveID, 17, new byte[] { 0, 0 });
+            var result = await SendWriteSingleCoilMsgFormat(SlaveID, 17, 0);
             return result;
         }
         public virtual async Task<bool> WriteRedLightOffAsync(byte SlaveID)
         {
-            var result = await SendWriteSingleCoilMsgFormat(SlaveID, 18, new byte[] { 0, 0 });
+            var result = await SendWriteSingleCoilMsgFormat(SlaveID, 18, 0);
             return result;
         }
         public virtual async Task<bool> WriteBuzzerOffAsync(byte SlaveID)
         {
-            var result = await SendWriteSingleCoilMsgFormat(SlaveID, 19, new byte[] { 0, 0 });
+            var result = await SendWriteSingleCoilMsgFormat(SlaveID, 19, 0);
             return result;
         }
         public virtual async Task<bool> AllLightOffAsync(byte SlaveID)
         {
-            var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 8 }, new byte[] { 0, 0 });
-          // var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 19, new byte[] { 0, 2 }, new byte[] { 0, 0 });
-
+            //var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 16, new byte[] { 0, 8 }, new byte[] { 0, 0 });
+            // var result = await SendWriteMultipleCoilsMsgFormat(SlaveID, 19, new byte[] { 0, 2 }, new byte[] { 0, 0 });
+            var result = false;
             return result;
         }
         public virtual async Task<bool> ReadAllLightsAsync(byte SlaveID)

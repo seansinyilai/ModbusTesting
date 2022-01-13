@@ -91,7 +91,8 @@ namespace ModbusTesting
         /// <returns></returns>
         public virtual async Task<bool> ReadPZ900ModeEnd(byte SlaveID)
         {
-            var result = await ReadHoldingRegister_SendMsgFormat(SlaveID, 20480, 1);
+          //  var result = await ReadHoldingRegister_SendMsgFormat(SlaveID, 20480, 1);
+            var result = await ReadHoldingRegister_SendMsgFormat(SlaveID, 12288, 1);
             return result;
         }
         /// <summary>
@@ -112,7 +113,9 @@ namespace ModbusTesting
             string lowbit = binartsaa.Substring(4, 4);
             tmp[0] = Convert.ToByte(Convert.ToInt32(highbit, 2));
             tmp[1] = Convert.ToByte(Convert.ToInt32(lowbit, 2));
-            var result = await SendWriteSingleRegisterMsgFormat(SlaveID, 20480, tmp);
+            //var result = await SendWriteSingleRegisterMsgFormat(SlaveID, 20480, tmp);
+            //var result = await SendWriteSingleRegisterMsgFormat(SlaveID, 57, tmp);
+            var result = await SendWriteSingleRegisterMsgFormat(SlaveID, 57, data);
             return result;
         }
         /// <summary>
