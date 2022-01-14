@@ -49,18 +49,49 @@ namespace ModbusTesting
         private async Task SendWriteMultipleRegisters()
         {
             //ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 2, new byte[] { 0, 3 }, new byte[] { 0, 10 }, new byte[] { 1, 2 }, new byte[] { 1, 2 });
-            await ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(2, 48, new byte[] { 0, 3 }, new byte[] { 0, 1 }, new byte[] { 0, 1 }, new byte[] { 0, 1 });
+            //await ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 48,
+            //                                                                        new byte[] { 0, 3 },
+            //                                                                        new byte[] { 2, 2 },
+            //                                                                        new byte[] { 3, 3 },
+            //                                                                        new byte[] { 4, 4 });       
+            //await ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 48,
+            //                                                                        new byte[] { 0, 1 },
+            //                                                                        new byte[] { 0, 221 });
+            await ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 48, new byte[] { 220 });
+            SpinWait.SpinUntil(() => false, 2000);
+            await ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 48, new byte[] { 221 });
+            SpinWait.SpinUntil(() => false, 2000);
+            await ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 48, new byte[] { 222 });
+            SpinWait.SpinUntil(() => false, 2000);
+            await ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 48, new byte[] { 223 });
 
         }
 
         private async Task SendWriteMultipleCoils()
         {
+            bool[] array = new bool[14];
             //await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 20, new byte[] { 0, 40 }, new byte[] { 205, 01 }, new byte[] { 125, 20 });
             //await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 20, new byte[] { 0, 56 }, new byte[] { 205, 01 }, new byte[] { 125, 20 }, new byte[] { 20, 50 });
             //await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 20, new byte[] { 0, 80 }, new byte[] { 50, 0 }, new byte[] { 255, 0 }, new byte[] { 255, 0 }, new byte[] { 255, 0 }, new byte[] { 255, 0 });
 
-            var asdf = await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 8, new byte[] { 0, 2 }, new byte[] { 255, 0 });
-            //var asdf = await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 16, new bool[] { true, false, true, false, true });
+            //var asdf = await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 8, new byte[] { 0, 3 }, new byte[] { 5, 0 });
+            //var asdf = await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 16, new byte[] { 0, 7 }, new byte[] { 119, 0 });
+            //var asdf = await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 8, new byte[] { 0, 16 }, new byte[] { 1, 149 });
+            //var asdf = await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 8, new byte[] { 0, 20 }, new byte[] { 170, 170 });
+            for (int i = 0; i < 14; i++)
+            {
+                array[i] = true;
+                //if ((i % 2).Equals(0))
+                //{
+                //    array[i] = false;
+                //}
+                //else
+                //{
+                //    array[i] = true;
+                //}
+            }
+            var asdf = await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 8, new bool[] { true, true, false, false, true, false, true, true, true });
+            //new bool[] { true, true, false, false, true, false, true, false, true }
         }
 
         private async Task SendWriteSingleRegister()

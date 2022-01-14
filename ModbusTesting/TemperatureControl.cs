@@ -69,7 +69,8 @@ namespace ModbusTesting
                  shiftingIdx += 3;
                  value1 = tmpStruct.Temperature.SplitShortToHighAndLowByte();
                  value2 = tmpStruct.TempTime.SplitShortToHighAndLowByte();
-                 result = await SendWriteMultipleRegistersMsgFormat(SlaveID, mPoints, new byte[] { 0, 2 }, value1, value2);
+                 //result = await SendWriteMultipleRegistersMsgFormat(SlaveID, mPoints, new byte[] { 0, 2 }, value1, value2);
+                 result = true;
              });
             var result2 = await SetPZ900ModeEnd(2, Convert.ToByte(listOfStruck.Count()));
             return result && result2;

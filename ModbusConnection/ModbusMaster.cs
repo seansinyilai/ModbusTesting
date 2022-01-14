@@ -654,9 +654,12 @@ namespace ModbusConnection
         /// <param name="FunctionCode">what to do</param>
         /// <param name="StartAddress">buffer</param>
         /// <param name="data">data to send</param>
+        /// 一次寫入最多就是16個bit  因為底層只接受byte 16 bits
         public async Task<bool> SendWriteMultipleCoilsMsgFormat(byte SlaveID, ushort StartAddress, bool[] OnOffVal)
         {
-            if (OnOffVal.Length > 255) return false;
+            if (OnOffVal.Length > 16 && OnOffVal.All(_ => _.Equals(true))) return false;
+            string binaryStr = string.Empty;
+            byte[] multiOutputData = new byte[2];
             var outPutQuantityHighLowBit = Convert.ToUInt16(OnOffVal.Length).SplitShortToHighAndLowByte();
             bool timeout = false;
             await taskFactory.StartNew(() =>
@@ -667,37 +670,48 @@ namespace ModbusConnection
                 {
                     result = "Length of data is invalid !!";
                 }
-                //for (int y = 0; y < multiOutputData.Count(); y++)
-                //{
-                //    int mmLength = multiOutputData[y].Length;
-                //    if (multiOutputData[y].Length != 2)
-                //    {
-                //        result = "Length of data is invalid !!";
-                //    }
-                //}
-
+                OnOffVal.ToList().ForEach((x) =>
+                {
+                    binaryStr += Convert.ToString(Convert.ToInt32(x));
+                });
+                var reversedBinary = binaryStr.ToCharArray();
+                Array.Reverse(reversedBinary);
+                binaryStr = string.Empty;
+                reversedBinary.ToList().ForEach(x =>
+                {
+                    binaryStr += x.ToString();
+                });
+                /// 限制8是因為丟入是一個byte 一個byte 丟的
+                if (binaryStr.Length > 8 && binaryStr.Length < 16)
+                {
+                    var tmpInt = Convert.ToInt32(binaryStr, 2);
+                    var tmpbyte = tmpInt.SplitIntToHighAndLowByte();
+                    multiOutputData[0] = tmpbyte[1];
+                    multiOutputData[1] = tmpbyte[0];
+                }
+                else if (binaryStr.Length > 8 && binaryStr.Length >= 16)
+                {
+                    var tmpInt = Convert.ToInt32(binaryStr, 2);
+                    var tmpbyte = tmpInt.SplitIntToHighAndLowByte();
+                    multiOutputData[0] = tmpbyte[0];
+                    multiOutputData[1] = tmpbyte[1];
+                }
+                else
+                {
+                    multiOutputData[0] = Convert.ToByte(binaryStr, 2);
+                    multiOutputData[1] = 0;
+                }
                 string logstr = string.Format("SendWriteMultipleCoilsStarts:{0} SlaveID={1} StartAddress={2} Result={3}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), SlaveID.ToString(), StartAddress.ToString(), result);
                 WriteLog(logstr, "Debug");
                 autoIncrement++;
-                //var highbit = Convert.ToString(outPutQuantityHighLowBit[0], 2).PadLeft(8, '0');
-                //var lowbit = Convert.ToString(outPutQuantityHighLowBit[1], 2).PadLeft(8, '0');
-                //var combined = highbit + lowbit;
-                //var quantityOutput = Convert.ToInt32(combined, 2);
                 var quantityOutput = OnOffVal.Length;
                 var N = quantityOutput / 8;
                 var remainder = quantityOutput % 8;
                 if (remainder != 0)
                 {
-                    N = quantityOutput;
                     N += 1;
                 }
-                //if (quantityOutput < (multiOutputData.Count() * 2 * 8))  /// 8 是8個bits
-                //{
-                //    result = "Length of data is invalid !!";
-                //    return string.Format("Info: {0} Length:{1}", result, mLength.ToString());
-                //}
-                //byte[] data = new byte[3 + N + 1];
-                byte[] data = new byte[N + 2];
+                byte[] data = new byte[3 + N + 1];
                 int i = 0;
                 for (; i < outPutQuantityHighLowBit.Length; i++)
                 {
@@ -705,19 +719,12 @@ namespace ModbusConnection
                 }
                 data[i] = Convert.ToByte(N);
                 i++;
-                OnOffVal.ToList().ForEach((x) =>
+
+                for (int x = 0; x < multiOutputData.Length; x++)
                 {
-                    data[i] = Convert.ToByte(x);
+                    data[i] = multiOutputData[x];
                     i++;
-                });
-                //for (int y = 0; y < multiOutputData.Count(); y++)
-                //{
-                //    for (int x = 0; x < multiOutputData[y].Length; x++)
-                //    {
-                //        data[i] = multiOutputData[y][x];
-                //        i++;
-                //    }
-                //}
+                }
                 SendQueue.EnQueue(new SendStruct()
                 {
                     TransactionID = autoIncrement,
@@ -756,93 +763,93 @@ namespace ModbusConnection
         ///// <param name="FunctionCode">what to do</param>
         ///// <param name="StartAddress">buffer</param>
         ///// <param name="data">data to send</param>
-        public async Task<bool> SendWriteMultipleCoilsMsgFormat(byte SlaveID, ushort StartAddress, byte[] outPutQuantityHighLowBit, params byte[][] multiOutputData)
-        {
-            bool timeout = false;
-            await taskFactory.StartNew(() =>
-            {
-                string result = string.Empty;
-                int mLength = outPutQuantityHighLowBit.Length;
-                if (mLength != 2)
-                {
-                    result = "Length of data is invalid !!";
-                }
-                for (int y = 0; y < multiOutputData.Count(); y++)
-                {
-                    int mmLength = multiOutputData[y].Length;
-                    if (multiOutputData[y].Length != 2)
-                    {
-                        result = "Length of data is invalid !!";
-                    }
-                }
+        //public async Task<bool> SendWriteMultipleCoilsMsgFormat(byte SlaveID, ushort StartAddress, byte[] outPutQuantityHighLowBit, params byte[][] multiOutputData)
+        //{
+        //    bool timeout = false;
+        //    await taskFactory.StartNew(() =>
+        //    {
+        //        string result = string.Empty;
+        //        int mLength = outPutQuantityHighLowBit.Length;
+        //        if (mLength != 2)
+        //        {
+        //            result = "Length of data is invalid !!";
+        //        }
+        //        for (int y = 0; y < multiOutputData.Count(); y++)
+        //        {
+        //            int mmLength = multiOutputData[y].Length;
+        //            if (multiOutputData[y].Length != 2)
+        //            {
+        //                result = "Length of data is invalid !!";
+        //            }
+        //        }
 
-                string logstr = string.Format("SendWriteMultipleCoilsStarts:{0} SlaveID={1} StartAddress={2} Result={3}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), SlaveID.ToString(), StartAddress.ToString(), result);
-                WriteLog(logstr, "Debug");
-                autoIncrement++;
-                var highbit = Convert.ToString(outPutQuantityHighLowBit[0], 2).PadLeft(8, '0');
-                var lowbit = Convert.ToString(outPutQuantityHighLowBit[1], 2).PadLeft(8, '0');
-                var combined = highbit + lowbit;
-                var quantityOutput = Convert.ToInt32(combined, 2);
-                var N = quantityOutput / 8;
-                var remainder = quantityOutput % 8;
-                if (remainder != 0)
-                {
-                    N += 1;
-                }
-                //if (quantityOutput < (multiOutputData.Count() * 2 * 8))  /// 8 是8個bits
-                //{
-                //    result = "Length of data is invalid !!";
-                //    return string.Format("Info: {0} Length:{1}", result, mLength.ToString());
-                //}
-                //byte[] data = new byte[3 + N + 1];
-                byte[] data = new byte[3 + N + 1];
-                int i = 0;
-                for (; i < outPutQuantityHighLowBit.Length; i++)
-                {
-                    data[i] = outPutQuantityHighLowBit[i];
-                }
-                data[i] = Convert.ToByte(N);
-                i++;
-                for (int y = 0; y < multiOutputData.Count(); y++)
-                {
-                    for (int x = 0; x < multiOutputData[y].Length; x++)
-                    {
-                        data[i] = multiOutputData[y][x];
-                        i++;
-                    }
-                }
-                SendQueue.EnQueue(new SendStruct()
-                {
-                    TransactionID = autoIncrement,
-                    ProtocolID = 0,
-                    Address = SlaveID,
-                    FunctionCode = (byte)FunctionCode.WriteMultipleCoils,
-                    StartAddress = StartAddress,
-                    data = data,                                  ///陣列長度
-                    dataLength = data.Length,
-                });
-                //autoReset.WaitOne();
-                timeout = autoReset.WaitOne(5000);
-                if (timeout.Equals(false))
-                {
-                    string WriteSingleCoilVar = string.Format("[Timeout] WriteMultipleCoils: {0}  AutoReset: {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), timeout.ToString());
-                    WriteLog(WriteSingleCoilVar, "Error");
-                    toSendFlag = false;
-                    autoReset.Set();
-                }
-                string logstrEnd = string.Format("SendWriteMultipleCoilsEnds:{0} " +
-                                           "SlaveID={1} StartAddress={2} " +
-                                           "result={3} autoIncrement={4}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
-                                           SlaveID.ToString(),
-                                           StartAddress.ToString(),
-                                           result,
-                                           autoIncrement.ToString());
-                WriteLog(logstr, "Debug");
-            });
-            return true && timeout;
-            //result = "OK";
-            //return result;
-        }
+        //        string logstr = string.Format("SendWriteMultipleCoilsStarts:{0} SlaveID={1} StartAddress={2} Result={3}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), SlaveID.ToString(), StartAddress.ToString(), result);
+        //        WriteLog(logstr, "Debug");
+        //        autoIncrement++;
+        //        var highbit = Convert.ToString(outPutQuantityHighLowBit[0], 2).PadLeft(8, '0');
+        //        var lowbit = Convert.ToString(outPutQuantityHighLowBit[1], 2).PadLeft(8, '0');
+        //        var combined = highbit + lowbit;
+        //        var quantityOutput = Convert.ToInt32(combined, 2);
+        //        var N = quantityOutput / 8;
+        //        var remainder = quantityOutput % 8;
+        //        if (remainder != 0)
+        //        {
+        //            N += 1;
+        //        }
+        //        //if (quantityOutput < (multiOutputData.Count() * 2 * 8))  /// 8 是8個bits
+        //        //{
+        //        //    result = "Length of data is invalid !!";
+        //        //    return string.Format("Info: {0} Length:{1}", result, mLength.ToString());
+        //        //}
+        //        //byte[] data = new byte[3 + N + 1];
+        //        byte[] data = new byte[3 + N + 1];
+        //        int i = 0;
+        //        for (; i < outPutQuantityHighLowBit.Length; i++)
+        //        {
+        //            data[i] = outPutQuantityHighLowBit[i];
+        //        }
+        //        data[i] = Convert.ToByte(N);
+        //        i++;
+        //        for (int y = 0; y < multiOutputData.Count(); y++)
+        //        {
+        //            for (int x = 0; x < multiOutputData[y].Length; x++)
+        //            {
+        //                data[i] = multiOutputData[y][x];
+        //                i++;
+        //            }
+        //        }
+        //        SendQueue.EnQueue(new SendStruct()
+        //        {
+        //            TransactionID = autoIncrement,
+        //            ProtocolID = 0,
+        //            Address = SlaveID,
+        //            FunctionCode = (byte)FunctionCode.WriteMultipleCoils,
+        //            StartAddress = StartAddress,
+        //            data = data,                                  ///陣列長度
+        //            dataLength = data.Length,
+        //        });
+        //        //autoReset.WaitOne();
+        //        timeout = autoReset.WaitOne(5000);
+        //        if (timeout.Equals(false))
+        //        {
+        //            string WriteSingleCoilVar = string.Format("[Timeout] WriteMultipleCoils: {0}  AutoReset: {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), timeout.ToString());
+        //            WriteLog(WriteSingleCoilVar, "Error");
+        //            toSendFlag = false;
+        //            autoReset.Set();
+        //        }
+        //        string logstrEnd = string.Format("SendWriteMultipleCoilsEnds:{0} " +
+        //                                   "SlaveID={1} StartAddress={2} " +
+        //                                   "result={3} autoIncrement={4}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
+        //                                   SlaveID.ToString(),
+        //                                   StartAddress.ToString(),
+        //                                   result,
+        //                                   autoIncrement.ToString());
+        //        WriteLog(logstr, "Debug");
+        //    });
+        //    return true && timeout;
+        //    //result = "OK";
+        //    //return result;
+        //}
 
         /// <param name="transactionID">autoIncrement</param>
         /// <param name="protocolID">0 modbus</param>
@@ -850,24 +857,19 @@ namespace ModbusConnection
         /// <param name="FunctionCode">what to do</param>
         /// <param name="StartAddress">buffer</param>
         /// <param name="data">data to send</param>
-        public async Task<bool> SendWriteMultipleRegistersMsgFormat(byte SlaveID, ushort StartAddress, byte[] quantityHighLowBit, params byte[][] multipleData)
+        public async Task<bool> SendWriteMultipleRegistersMsgFormat(byte SlaveID, ushort StartAddress, byte[] multipleData)
         {
             bool timeout = false;
             await taskFactory.StartNew(() =>
             {
+                int tmpByteIdx = 0;
                 string result = string.Empty;
-                int mLength = quantityHighLowBit.Length;
+                int mLength = multipleData.Length;
+                byte[] tempByte = new byte[mLength * 2];
+                var quantityHighLowBit = mLength.SplitIntToHighAndLowByte();
                 if (mLength != 2)
                 {
                     result = "Length of data is invalid !!";
-                }
-                for (int y = 0; y < multipleData.Count(); y++)
-                {
-                    int mmLength = multipleData[y].Length;
-                    if (multipleData[y].Length != 2)
-                    {
-                        result = "Length of data is invalid !!";
-                    }
                 }
                 string logstr = string.Format("SendWriteMultipleRegistersStarts:{0} SlaveID={1} StartAddress={2} Result={3}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), SlaveID.ToString(), StartAddress.ToString(), result);
                 WriteLog(logstr, "Debug");
@@ -876,7 +878,7 @@ namespace ModbusConnection
                 var lowbit = Convert.ToString(quantityHighLowBit[1], 2).PadLeft(8, '0');
                 var combined = highbit + lowbit;
                 var final = Convert.ToInt32(combined, 2);
-                byte[] data = new byte[(2 * multipleData.Count()) + 3];
+                byte[] data = new byte[(2 * mLength) + 3];
                 int i = 0;
                 for (; i < quantityHighLowBit.Length; i++)
                 {
@@ -884,15 +886,21 @@ namespace ModbusConnection
                 }
                 data[i] = Convert.ToByte(2 * final);
                 i++;
-                for (int y = 0; y < multipleData.Count(); y++)
-                {
-                    for (int x = 0; x < multipleData[y].Length; x++)
-                    {
-                        data[i] = multipleData[y][x];
-                        i++;
-                    }
-                }
 
+                multipleData.ToList().ForEach(val =>
+                {
+                    var convertedResult = val.SplitByteToHighAndLowByte();
+                    var highbits = convertedResult[0];
+                    var lowbits = convertedResult[1];
+                    tempByte[tmpByteIdx] = highbits;
+                    tempByte[tmpByteIdx + 1] = lowbits;
+                    tmpByteIdx+=2;
+                });
+                for (int x = 0; x < tempByte.Length; x++)
+                {
+                    data[i] = tempByte[x];
+                    i++;
+                }
                 SendQueue.EnQueue(new SendStruct()
                 {
                     TransactionID = autoIncrement,
@@ -903,7 +911,7 @@ namespace ModbusConnection
                     data = data,                                  ///陣列長度
                     dataLength = data.Length,
                 });
-                //autoReset.WaitOne();
+
                 timeout = autoReset.WaitOne(5000);
                 if (timeout.Equals(false))
                 {
@@ -923,6 +931,85 @@ namespace ModbusConnection
             });
             return true && timeout;
         }
+        ///// <param name="transactionID">autoIncrement</param>
+        ///// <param name="protocolID">0 modbus</param>
+        ///// <param name="SlaveID">any</param>
+        ///// <param name="FunctionCode">what to do</param>
+        ///// <param name="StartAddress">buffer</param>
+        ///// <param name="data">data to send</param>
+        //public async Task<bool> SendWriteMultipleRegistersMsgFormat(byte SlaveID, ushort StartAddress, byte[] quantityHighLowBit, params byte[][] multipleData)
+        //{
+        //    bool timeout = false;
+        //    await taskFactory.StartNew(() =>
+        //    {
+        //        string result = string.Empty;
+        //        int mLength = quantityHighLowBit.Length;
+        //        if (mLength != 2)
+        //        {
+        //            result = "Length of data is invalid !!";
+        //        }
+        //        for (int y = 0; y < multipleData.Count(); y++)
+        //        {
+        //            int mmLength = multipleData[y].Length;
+        //            if (multipleData[y].Length != 2)
+        //            {
+        //                result = "Length of data is invalid !!";
+        //            }
+        //        }
+        //        string logstr = string.Format("SendWriteMultipleRegistersStarts:{0} SlaveID={1} StartAddress={2} Result={3}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), SlaveID.ToString(), StartAddress.ToString(), result);
+        //        WriteLog(logstr, "Debug");
+        //        autoIncrement++;
+        //        var highbit = Convert.ToString(quantityHighLowBit[0], 2).PadLeft(8, '0');
+        //        var lowbit = Convert.ToString(quantityHighLowBit[1], 2).PadLeft(8, '0');
+        //        var combined = highbit + lowbit;
+        //        var final = Convert.ToInt32(combined, 2);
+        //        byte[] data = new byte[(2 * multipleData.Count()) + 3];
+        //        int i = 0;
+        //        for (; i < quantityHighLowBit.Length; i++)
+        //        {
+        //            data[i] = quantityHighLowBit[i];
+        //        }
+        //        data[i] = Convert.ToByte(2 * final);
+        //        i++;
+        //        for (int y = 0; y < multipleData.Count(); y++)
+        //        {
+        //            for (int x = 0; x < multipleData[y].Length; x++)
+        //            {
+        //                data[i] = multipleData[y][x];
+        //                i++;
+        //            }
+        //        }
+
+        //        SendQueue.EnQueue(new SendStruct()
+        //        {
+        //            TransactionID = autoIncrement,
+        //            ProtocolID = 0,
+        //            Address = SlaveID,
+        //            FunctionCode = (byte)FunctionCode.WriteMultipleRegisters,
+        //            StartAddress = StartAddress,
+        //            data = data,                                  ///陣列長度
+        //            dataLength = data.Length,
+        //        });
+
+        //        timeout = autoReset.WaitOne(5000);
+        //        if (timeout.Equals(false))
+        //        {
+        //            string WriteSingleCoilVar = string.Format("[Timeout] WriteMultipleRegisters: {0}  AutoReset: {1}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"), timeout.ToString());
+        //            WriteLog(WriteSingleCoilVar, "Error");
+        //            toSendFlag = false;
+        //            autoReset.Set();
+        //        }
+        //        string logstrEnd = string.Format("SendWriteMultipleRegistersEnds:{0} " +
+        //                                   "SlaveID={1} StartAddress={2} " +
+        //                                   "result={3} autoIncrement={4}", DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"),
+        //                                   SlaveID.ToString(),
+        //                                   StartAddress.ToString(),
+        //                                   result,
+        //                                   autoIncrement.ToString());
+        //        WriteLog(logstrEnd, "Debug");
+        //    });
+        //    return true && timeout;
+        //}
 
         /// <param name="transactionID">autoIncrement</param>
         /// <param name="protocolID">0 modbus</param>
