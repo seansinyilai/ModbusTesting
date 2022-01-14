@@ -441,15 +441,6 @@ namespace ModbusConnection
             else
             {
                 data = SingleData.SplitShortToHighAndLowByte();
-                //if (SingleData.Equals(0))
-                //{
-                //    data = new byte[] { 0, 0 };
-                //}
-                //else if (SingleData.Equals(1))
-                //{
-                //    data = new byte[] { 0, 255 };
-                //}
-                //var singleDataTemp = Convert.ToString(Convert.ToInt32(SingleData), 2);
             }
             await taskFactory.StartNew(() =>
             {
@@ -492,6 +483,8 @@ namespace ModbusConnection
             });
             return true && timeout;
         }
+
+        #region 先暫時不用這方式
         ///// <param name="transactionID">autoIncrement</param>
         ///// <param name="protocolID">0 modbus</param>
         ///// <param name="SlaveID">any</param>
@@ -542,6 +535,8 @@ namespace ModbusConnection
         //     });
         //    return true && timeout;
         //}
+        #endregion
+
         /// <param name="transactionID">autoIncrement</param>
         /// <param name="protocolID">0 modbus</param>
         /// <param name="SlaveID">any</param>
@@ -597,6 +592,9 @@ namespace ModbusConnection
            });
             return true && timeout;
         }
+
+        #region 先暫時不用這方式
+
         ///// <param name="transactionID">autoIncrement</param>
         ///// <param name="protocolID">0 modbus</param>
         ///// <param name="SlaveID">any</param>
@@ -648,6 +646,9 @@ namespace ModbusConnection
         //   });
         //    return true && timeout;
         //}
+
+        #endregion
+
         /// <param name="transactionID">autoIncrement</param>
         /// <param name="protocolID">0 modbus</param>
         /// <param name="SlaveID">any</param>
@@ -757,6 +758,8 @@ namespace ModbusConnection
             //result = "OK";
             //return result;
         }
+
+        #region 先暫時不用這方式
         ///// <param name="transactionID">autoIncrement</param>
         ///// <param name="protocolID">0 modbus</param>
         ///// <param name="SlaveID">any</param>
@@ -850,6 +853,7 @@ namespace ModbusConnection
         //    //result = "OK";
         //    //return result;
         //}
+        #endregion
 
         /// <param name="transactionID">autoIncrement</param>
         /// <param name="protocolID">0 modbus</param>
