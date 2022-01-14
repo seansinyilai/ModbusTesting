@@ -935,6 +935,8 @@ namespace ModbusConnection
             });
             return true && timeout;
         }
+
+        #region 先暫時不用這方式
         ///// <param name="transactionID">autoIncrement</param>
         ///// <param name="protocolID">0 modbus</param>
         ///// <param name="SlaveID">any</param>
@@ -1014,6 +1016,7 @@ namespace ModbusConnection
         //    });
         //    return true && timeout;
         //}
+        #endregion
 
         /// <param name="transactionID">autoIncrement</param>
         /// <param name="protocolID">0 modbus</param>
