@@ -1154,6 +1154,7 @@ namespace ModbusConnection
             });
             return true && timeout;
         }
+
         public void SENDRequest(SendStruct obj)
         {
             byte[] lengthTotal = null;

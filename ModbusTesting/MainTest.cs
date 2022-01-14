@@ -57,13 +57,20 @@ namespace ModbusTesting
             //await ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 48,
             //                                                                        new byte[] { 0, 1 },
             //                                                                        new byte[] { 0, 221 });
-            await ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 48, new byte[] { 220 });
-            SpinWait.SpinUntil(() => false, 2000);
-            await ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 48, new byte[] { 221 });
-            SpinWait.SpinUntil(() => false, 2000);
-            await ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 48, new byte[] { 222 });
-            SpinWait.SpinUntil(() => false, 2000);
-            await ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 48, new byte[] { 223 });
+            byte[] array = new byte[64];
+            for (int i = 0; i < 64; i++)
+            {
+                array[i] =Convert.ToByte(i+1) ;
+            }
+            await ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 0, array);
+
+
+            //SpinWait.SpinUntil(() => false, 2000);
+            //await ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 48, new byte[] { 221 });
+            //SpinWait.SpinUntil(() => false, 2000);
+            //await ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 48, new byte[] { 222 });
+            //SpinWait.SpinUntil(() => false, 2000);
+            //await ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 48, new byte[] { 223 });
 
         }
 
@@ -117,14 +124,15 @@ namespace ModbusTesting
             //ConnectionEstablishment.ReadHoldingRegister_SendMsgFormat(1, 0, 3);
             // ConnectionEstablishment.ReadHoldingRegister_SendMsgFormat(2, 48, 3);
             //       var a = await ConnectionEstablishment2.ReadPZ900ModeEnd(2);
-            await Task.Run(async () =>
-            {
-                while (true)
-                {
-                    var asd = await ConnectionEstablishment.ReadHoldingRegister_SendMsgFormat(1, 0, 20);
+            await ConnectionEstablishment.ReadHoldingRegister_SendMsgFormat(1, 0, 64);
+            //await Task.Run(async () =>
+            //{
+            //    while (true)
+            //    {
+            //        var asd = await ConnectionEstablishment.ReadHoldingRegister_SendMsgFormat(1, 0, 20);
 
-                }
-            });
+            //    }
+            //});
         }
 
         private async Task ReadDiscreteInputs()
