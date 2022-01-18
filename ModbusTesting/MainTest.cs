@@ -60,7 +60,7 @@ namespace ModbusTesting
             byte[] array = new byte[64];
             for (int i = 0; i < 64; i++)
             {
-                array[i] =Convert.ToByte(i+1) ;
+                array[i] = Convert.ToByte(i + 1);
             }
             await ConnectionEstablishment.SendWriteMultipleRegistersMsgFormat(1, 0, array);
 
@@ -76,7 +76,68 @@ namespace ModbusTesting
 
         private async Task SendWriteMultipleCoils()
         {
-            bool[] array = new bool[14];
+            //  var result = await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 19, new byte[] { 0, 21}, new byte[] { 173, 90 }, new byte[] { 22,0 });
+
+            string binaryStr = string.Empty;
+            byte[] tmptwo = new byte[2];
+            List<byte[]> asdf = new List<byte[]>();
+            int tmploop = 0;
+            int startbit = 0;
+            int amountofstr = 16;//    101011010101101010110
+           // bool[] tmp = new bool[] { true, false, true, false, true, true, false, true, false, true, false, true, true, false, true, false, true, false, true, true, false };
+             bool[] tmp = new bool[] { true, false, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, false, true, true, true, true, true, true, false, true, };
+            Console.WriteLine(tmp.Length);
+            // bool[] tmp = new bool[2000];
+
+            //for (int i = 0; i < tmp.Length; i++)
+            //{
+            //    if (!(i%2).Equals(0))
+            //    {
+            //        tmp[i] = false;
+            //    }
+            //    else
+            //    {
+            //        tmp[i] = true;
+            //    }
+            //}
+            var result = await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 19, tmp);
+
+            //var tmpLength = tmp.Length;
+            //var mlength = tmpLength.SplitIntToHighAndLowByte();
+
+            //for (int i = 0; i < tmpLength; i++)
+            //{
+            //    binaryStr += Convert.ToString(Convert.ToInt32(tmp[i]));
+            //}
+            //var enterTimes = binaryStr.Length / 16;
+            //var ableUnableDivided = (binaryStr.Length % 16).Equals(0);
+            //if (!ableUnableDivided)
+            //{
+            //    enterTimes += 1;
+            //}
+            //var leftVal = binaryStr.Length % 16;
+            //byte[] byteArray = new byte[2];
+            //for (int i = 0; i < enterTimes; i++)
+            //{
+            //    if ((enterTimes - 1).Equals(i)&&!leftVal.Equals(0)) amountofstr = leftVal;
+            //    startbit = tmploop;
+            //    string tmpEmp = string.Empty;
+            //    var reversedBinary = binaryStr.Substring(startbit, amountofstr).ToCharArray();
+            //    Array.Reverse(reversedBinary);
+            //    reversedBinary.ToList().ForEach(x =>
+            //    {
+            //        tmpEmp += x.ToString();
+            //    });
+            //    byteArray = Convert.ToInt32(tmpEmp, 2).SplitIntToReverseHighAndLowByte();
+            //    asdf.Add(byteArray);
+            //    tmploop += 16;
+            //}
+            //var result = await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 19, mlength, asdf.ToArray());
+
+            #region 暫時
+
+            #endregion
+            ///  bool[] array = new bool[14];   106 213 21
             //await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 20, new byte[] { 0, 40 }, new byte[] { 205, 01 }, new byte[] { 125, 20 });
             //await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 20, new byte[] { 0, 56 }, new byte[] { 205, 01 }, new byte[] { 125, 20 }, new byte[] { 20, 50 });
             //await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 20, new byte[] { 0, 80 }, new byte[] { 50, 0 }, new byte[] { 255, 0 }, new byte[] { 255, 0 }, new byte[] { 255, 0 }, new byte[] { 255, 0 });
@@ -85,19 +146,19 @@ namespace ModbusTesting
             //var asdf = await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 16, new byte[] { 0, 7 }, new byte[] { 119, 0 });
             //var asdf = await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 8, new byte[] { 0, 16 }, new byte[] { 1, 149 });
             //var asdf = await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 8, new byte[] { 0, 20 }, new byte[] { 170, 170 });
-            for (int i = 0; i < 14; i++)
-            {
-                array[i] = true;
-                //if ((i % 2).Equals(0))
-                //{
-                //    array[i] = false;
-                //}
-                //else
-                //{
-                //    array[i] = true;
-                //}
-            }
-            var asdf = await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 8, new bool[] { true, true, false, false, true, false, true, true, true });
+            ///   for (int i = 0; i < 14; i++)
+            ///    {
+            //       array[i] = true;
+            //if ((i % 2).Equals(0))
+            //{
+            //    array[i] = false;
+            //}
+            //else
+            //{
+            //    array[i] = true;
+            //}
+            ///   }
+            ///   var asdf = await ConnectionEstablishment.SendWriteMultipleCoilsMsgFormat(1, 8, new bool[] { true, true, false, false, true, false, true, true, true });
             //new bool[] { true, true, false, false, true, false, true, false, true }
         }
 
