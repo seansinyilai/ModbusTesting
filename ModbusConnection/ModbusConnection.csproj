@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
-    <PackageReference Include="MVVMCore" Version="1.1.2.7" />
+    <PackageReference Include="MVVMCore" Version="1.1.2.8" />
     <PackageReference Include="Serilog" Version="3.0.1" />
   </ItemGroup>
 </Project>
