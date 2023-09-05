@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31424.327
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33414.496
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModbusTesting", "ModbusTesting\ModbusTesting.csproj", "{025429FA-3EB2-44CC-9363-022CF4F8E4F4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModbusTesting", "ModbusTesting\ModbusTesting.csproj", "{025429FA-3EB2-44CC-9363-022CF4F8E4F4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModbusConnection", "ModbusConnection\ModbusConnection.csproj", "{49D9A4E6-C5DD-4B2A-B51F-5569AC92B704}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModbusConnection", "ModbusConnection\ModbusConnection.csproj", "{49D9A4E6-C5DD-4B2A-B51F-5569AC92B704}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,16 +20,16 @@ Global
 		{025429FA-3EB2-44CC-9363-022CF4F8E4F4}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{025429FA-3EB2-44CC-9363-022CF4F8E4F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{025429FA-3EB2-44CC-9363-022CF4F8E4F4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{025429FA-3EB2-44CC-9363-022CF4F8E4F4}.Release|x64.ActiveCfg = Release|Any CPU
-		{025429FA-3EB2-44CC-9363-022CF4F8E4F4}.Release|x64.Build.0 = Release|Any CPU
+		{025429FA-3EB2-44CC-9363-022CF4F8E4F4}.Release|x64.ActiveCfg = Release|x64
+		{025429FA-3EB2-44CC-9363-022CF4F8E4F4}.Release|x64.Build.0 = Release|x64
 		{49D9A4E6-C5DD-4B2A-B51F-5569AC92B704}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{49D9A4E6-C5DD-4B2A-B51F-5569AC92B704}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{49D9A4E6-C5DD-4B2A-B51F-5569AC92B704}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{49D9A4E6-C5DD-4B2A-B51F-5569AC92B704}.Debug|x64.Build.0 = Debug|Any CPU
 		{49D9A4E6-C5DD-4B2A-B51F-5569AC92B704}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{49D9A4E6-C5DD-4B2A-B51F-5569AC92B704}.Release|Any CPU.Build.0 = Release|Any CPU
-		{49D9A4E6-C5DD-4B2A-B51F-5569AC92B704}.Release|x64.ActiveCfg = Release|Any CPU
-		{49D9A4E6-C5DD-4B2A-B51F-5569AC92B704}.Release|x64.Build.0 = Release|Any CPU
+		{49D9A4E6-C5DD-4B2A-B51F-5569AC92B704}.Release|x64.ActiveCfg = Release|x64
+		{49D9A4E6-C5DD-4B2A-B51F-5569AC92B704}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
