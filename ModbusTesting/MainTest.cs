@@ -1,4 +1,5 @@
 ﻿using ModbusConnection;
+using MVVMCore.Core.MVVM.Models;
 using Serilog;
 using System;
 using System.Collections.Generic;
